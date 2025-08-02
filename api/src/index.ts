@@ -9,9 +9,5 @@ app.use('*', cors());
 app.get("/message", (c) => {
   return c.text("Hello from RAIDHack API! CI/CD is working!");
 });
-// メッセージエンドポイント (/api/message)
-app.get("/api/message", (c) => {
-  return c.text("Hello from RAIDHack API!");
-});
 
 export default app;
