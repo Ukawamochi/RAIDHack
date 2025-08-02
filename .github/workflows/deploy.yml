@@ -2,9 +2,9 @@ name: Deploy RAIDHack
 
 on:
     push:
-        branches: [ main ]
+        branches: [ master ]  # mainからmasterに変更
     pull_request:
-        branches: [ main ]
+        branches: [ master ]  # mainからmasterに変更
     workflow_dispatch:
 
 jobs:
