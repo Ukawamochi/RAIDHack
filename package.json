@@ -4,6 +4,8 @@
     "description": "RAIDHack - Cloudflare Pages + Workers Hello World",
     "private": true,
     "scripts": {
+        "watch:api": "nodemon --watch api/src --ext ts,js --exec \"cd api && wrangler dev\"",
+        "watch:web": "nodemon --watch web --ext html,js,css --exec \"cd web && wrangler pages dev . --port 3000\"",
         "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
         "dev:api": "cd api && npm run dev",
         "dev:web": "cd web && npx wrangler pages dev . --port 3000",
@@ -12,7 +14,8 @@
         "deploy": "npm run deploy:api && npm run deploy:web"
     },
     "devDependencies": {
-        "concurrently": "^9.2.0"
+        "concurrently": "^9.2.0",
+        "nodemon": "^3.1.10"
     },
     "engines": {
         "node": ">=18.0.0"

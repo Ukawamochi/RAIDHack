@@ -1,40 +1,73 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAIDHack - Hello World</title>
-    <link rel="stylesheet" href="style.css">
+    <title>RAIDHack</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #666;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #555;
+        }
+        button:active {
+            background: #444;
+            transform: scale(0.98);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            min-height: 50px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🚀 RAIDHack</h1>
-            <p>Cloudflare Pages + Workers モノリポ</p>
-        </header>
-
-        <main>
-            <section class="api-test">
-                <h2>Workers API Test</h2>
-                <button id="testBtn">APIをテスト</button>
-                <div id="apiResult" class="result"></div>
-            </section>
-
-            <section class="info">
-                <h2>構成情報</h2>
-                <ul>
-                    <li>Frontend: Cloudflare Pages</li>
-                    <li>Backend: Cloudflare Workers</li>
-                    <li>Repository: GitHub モノリポ</li>
-                </ul>
-            </section>
-        </main>
-
-        <footer>
-            <p>&copy; 2025 RAIDHack Project</p>
-        </footer>
+    <h1>RAIDHack Hello World</h1>
+    
+    <button id="testBtn">APIをテスト</button>
+    
+    <div id="result" class="result">
+        ここに結果が表示されます
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        document.getElementById('testBtn').onclick = async function() {
+            const button = document.getElementById('testBtn');
+            const resultDiv = document.getElementById('result');
+            
+            // ボタンを無効化して視覚的フィードバック
+            button.disabled = true;
+            button.textContent = 'テスト中...';
+            resultDiv.innerHTML = 'APIに接続中...';
+            
+            try {
+                const response = await fetch('http://localhost:8787/message');
+                const text = await response.text();
+                resultDiv.innerHTML = '✅ 成功: ' + text;
+            } catch (error) {
+                resultDiv.innerHTML = '❌ エラー: ' + error.message;
+            } finally {
+                // ボタンを元に戻す
+                button.disabled = false;
+                button.textContent = 'APIをテスト';
+            }
+        };
+    </script>
 </body>
 </html>

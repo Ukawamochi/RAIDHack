@@ -5,5 +5,5 @@ pages_build_output_dir = "."
 [env.production]
 name = "raidhack-web"
 
-[env.staging]
+[env.preview]
 name = "raidhack-web-staging"
