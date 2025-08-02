@@ -38,7 +38,7 @@
     </style>
 </head>
 <body>
-    <h1>RAIDHack Hello World</h1>
+    <h1>RAIDHack Hello World CI/CD working!</h1>
     
     <button id="testBtn">APIをテスト</button>
     
@@ -47,21 +47,24 @@
     </div>
 
     <script>
+        // ボタン押下時の処理
         document.getElementById('testBtn').onclick = async function() {
             const button = document.getElementById('testBtn');
             const resultDiv = document.getElementById('result');
-            
-            // ボタンを無効化して視覚的フィードバック
+            // ボタン無効化と表示更新
             button.disabled = true;
             button.textContent = 'テスト中...';
-            resultDiv.innerHTML = 'APIに接続中...';
-            
+            resultDiv.textContent = 'APIに接続中...';
+
+            // 相対パスでAPIにアクセス（Pages上で/api/*にルーティング）
+            const endpoint = '/api/message';
+
             try {
-                const response = await fetch('http://localhost:8787/message');
+                const response = await fetch(endpoint);
                 const text = await response.text();
-                resultDiv.innerHTML = '✅ 成功: ' + text;
+                resultDiv.textContent = `✅ 成功: ${text}`;
             } catch (error) {
-                resultDiv.innerHTML = '❌ エラー: ' + error.message;
+                resultDiv.textContent = `❌ エラー: ${error.message}`;
             } finally {
                 // ボタンを元に戻す
                 button.disabled = false;

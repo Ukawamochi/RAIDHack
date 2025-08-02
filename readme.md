@@ -19,5 +19,9 @@ npm run deploy:web
 ```bash
 npm run deploy
 ```
+### デプロイ先
+https://api.ukawamochi5.workers.dev/
+https://raidhack-web.pages.dev/
+
 
 > GitHub の main ブランチにプッシュすると、自動で CI/CD によるデプロイが実行されます。
