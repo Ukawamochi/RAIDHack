@@ -6,10 +6,7 @@
     "scripts": {
         "watch:api": "nodemon --watch api/src --ext ts,js --exec \"cd api && npm run dev\"",
         "watch:web": "nodemon --watch web --ext html,js,css --exec \"cd web && npm run dev\"",
-        "dev": "concurrently \"npm run watch:api\" \"npm run watch:web\"",
-        "deploy:api": "cd api && npm run deploy",
-        "deploy:web": "cd web && npx wrangler pages deploy . --project-name raidhack-web",
-        "deploy": "npm run deploy:api && npm run deploy:web"
+        "dev": "concurrently \"npm run watch:api\" \"npm run watch:web\""
     },
     "devDependencies": {
         "concurrently": "^9.2.0",
