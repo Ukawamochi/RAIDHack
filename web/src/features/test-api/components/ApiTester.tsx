@@ -72,7 +72,7 @@ function ApiTester() {
         border: '1px solid #ccc',
         borderRadius: '4px',
         minHeight: '50px',
-        backgroundColor: result?.success ? '#f0f8f0' : result?.success === false ? '#fff0f0' : '#f8f9fa'
+        backgroundColor: '#ffffff'
       }}>
         {!result ? (
           <span style={{ color: '#666' }}>ここに結果が表示されます</span>
@@ -85,23 +85,12 @@ function ApiTester() {
             }}>
               {result.success ? '✅ 成功' : '❌ エラー'}
             </div>
-            <div style={{ marginBottom: '8px' }}>
+            <div style={{ 
+              marginBottom: '8px',
+              color: '#333333'
+            }}>
               {result.message}
             </div>
-            {result.data && (
-              <div style={{
-                marginTop: '10px',
-                padding: '8px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '4px',
-                fontSize: '12px'
-              }}>
-                <strong>追加データ:</strong>
-                <pre style={{ margin: '4px 0 0 0', whiteSpace: 'pre-wrap' }}>
-                  {JSON.stringify(result.data, null, 2)}
-                </pre>
-              </div>
-            )}
           </>
         )}
       </div>
