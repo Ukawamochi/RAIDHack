@@ -1,69 +1,47 @@
-# React + TypeScript + Vite
+# RAIDHack Web フロントエンド
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+このディレクトリには、RAIDHackプロジェクトのWebフロントエンドが含まれています。
 
-Currently, two official plugins are available:
+## 開発環境
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 必要な環境
+- Node.js 20以上
+- npm
 
-## Expanding the ESLint configuration
+### ローカル開発の開始
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. 依存関係のインストール:
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. 開発サーバーの起動:
+```bash
+npm run dev
 ```
+ブラウザで http://localhost:5173 が自動で開いてください。
+
+3. APIサーバーも同時に起動してください:
+```bash
+# 別のターミナルで
+cd ../api
+npm run dev
+```
+
+### 本番ビルド
+
+```bash
+npm run build
+```
+
+ビルドされたファイルは `build/` フォルダに出力され、Cloudflare Pagesに自動デプロイされます。
+
+## 環境変数
+
+- `REACT_APP_API_BASE`: APIのベースURL
+  - ローカル開発: `http://localhost:8787` (自動設定)
+  - 本番環境: `https://raidhack-api.ukawamochi5.workers.dev` (CI/CDで設定)
+
+## デプロイ
+
+GitHubの`master`ブランチにプッシュすると、GitHub Actionsによって自動的にCloudflare Pagesにデプロイされます。
