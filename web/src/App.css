@@ -1,49 +1,42 @@
-.App {
-  font-family: Arial, sans-serif;
-  max-width: 600px;
-  margin: 50px auto;
-  padding: 20px;
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
   text-align: center;
 }
 
-h1 {
-  color: #333;
-  margin-bottom: 30px;
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-.test-button {
-  background: #666;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s;
-  font-size: 16px;
-  margin-bottom: 20px;
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.test-button:hover {
-  background: #555;
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
 }
 
-.test-button:active {
-  background: #444;
-  transform: scale(0.98);
+.card {
+  padding: 2em;
 }
 
-.test-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.result {
-  padding: 15px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  border-left: 4px solid #666;
-  font-family: 'Courier New', monospace;
-  white-space: pre-wrap;
-  text-align: left;
+.read-the-docs {
+  color: #888;
 }
