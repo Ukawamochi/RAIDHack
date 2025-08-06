@@ -17,9 +17,9 @@ npm install
 
 2. 開発サーバーの起動:
 ```bash
-npm start
+npm run dev
 ```
-ブラウザで http://localhost:3000 が自動で開きます。
+ブラウザで http://localhost:5173 を開いてください。
 
 3. APIサーバーも同時に起動してください:
 ```bash

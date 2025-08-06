@@ -65,6 +65,6 @@ jobs:
             - name: Deploy to Cloudflare Pages
               run: |
                   cd web
-                  npx wrangler@latest pages deploy build --project-name raidhack-web
+                  npx wrangler@latest pages deploy dist --project-name raidhack-web
               env:
                   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
