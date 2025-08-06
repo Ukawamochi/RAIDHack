@@ -1,9 +1,0 @@
-name = "raidhack-web"
-compatibility_date = "2025-01-21"
-pages_build_output_dir = "."
-
-[env.production]
-name = "raidhack-web"
-
-[env.preview]
-name = "raidhack-web-staging"

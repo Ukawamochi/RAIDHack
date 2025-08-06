@@ -59,6 +59,8 @@ jobs:
               run: |
                   cd web
                   npm run build
+              env:
+                  REACT_APP_API_BASE: https://raidhack-api.ukawamochi5.workers.dev
 
             - name: Deploy to Cloudflare Pages
               run: |

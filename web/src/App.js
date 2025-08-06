@@ -9,11 +9,9 @@ function App() {
     setIsLoading(true);
     setResult('APIに接続中...');
 
-    // 環境に応じたAPIエンドポイント
-    const isLocal = window.location.hostname === 'localhost';
-    const endpoint = isLocal 
-      ? 'http://localhost:8787/message'
-      : 'https://api.ukawamochi5.workers.dev/message';
+    // 環境変数からAPIベースURLを取得
+    const API_BASE = process.env.REACT_APP_API_BASE;
+    const endpoint = `${API_BASE}/message`;
 
     try {
       const response = await fetch(endpoint);

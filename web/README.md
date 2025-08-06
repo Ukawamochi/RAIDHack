@@ -1,70 +1,47 @@
-# Getting Started with Create React App
+# RAIDHack Web フロントエンド
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+このディレクトリには、RAIDHackプロジェクトのWebフロントエンドが含まれています。
 
-## Available Scripts
+## 開発環境
 
-In the project directory, you can run:
+### 必要な環境
+- Node.js 20以上
+- npm
 
-### `npm start`
+### ローカル開発の開始
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+1. 依存関係のインストール:
+```bash
+npm install
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+2. 開発サーバーの起動:
+```bash
+npm start
+```
+ブラウザで http://localhost:3000 が自動で開きます。
 
-### `npm test`
+3. APIサーバーも同時に起動してください:
+```bash
+# 別のターミナルで
+cd ../api
+npm run dev
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 本番ビルド
 
-### `npm run build`
+```bash
+npm run build
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+ビルドされたファイルは `build/` フォルダに出力され、Cloudflare Pagesに自動デプロイされます。
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 環境変数
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- `REACT_APP_API_BASE`: APIのベースURL
+  - ローカル開発: `http://localhost:8787` (自動設定)
+  - 本番環境: `https://raidhack-api.ukawamochi5.workers.dev` (CI/CDで設定)
 
-### `npm run eject`
+## デプロイ
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+GitHubの`master`ブランチにプッシュすると、GitHub Actionsによって自動的にCloudflare Pagesにデプロイされます。
