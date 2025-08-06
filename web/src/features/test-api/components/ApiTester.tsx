@@ -8,10 +8,8 @@ function ApiTester() {
     setIsLoading(true)
     setResult('APIに接続中...')
 
-    const isLocal = window.location.hostname === 'localhost'
-    const endpoint = isLocal 
-      ? 'http://localhost:8787/message'
-      : 'https://api.ukawamochi5.workers.dev/message'
+    const apiBase = import.meta.env.VITE_API_BASE || 'https://raidhack-api.ukawamochi5.workers.dev'
+    const endpoint = `${apiBase}/message`
 
     try {
       const response = await fetch(endpoint)
