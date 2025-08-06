@@ -15,20 +15,18 @@
 
 #### 方法1: 個別起動（推奨）
 
-**ターミナル1 - API サーバー:**
+**API**
 ```bash
-cd api
 npm install        # 初回のみ
-npm run dev
+npm run dev        # /apiで実行
 ```
 - **URL**: http://localhost:8787
-- **エンドポイント**: http://localhost:8787/message
 
-**ターミナル2 - Web サーバー:**
+**Web**
 ```bash
 cd web
 npm install        # 初回のみ
-npm run dev
+npm run dev        # /webで実行
 ```
 - **URL**: http://localhost:5173
 - **自動でAPI（localhost:8787）に接続**
@@ -58,11 +56,6 @@ git push origin master
 - API → Cloudflare Workers
 - Web → Cloudflare Pages
 
-### 緊急時の手動実行
-GitHub ActionsのWebインターフェースから「Run workflow」
-
-## 本番環境
-
 ### API
 - **URL**: https://raidhack-api.ukawamochi5.workers.dev/
 - **エンドポイント例**: https://raidhack-api.ukawamochi5.workers.dev/message
@@ -91,8 +84,6 @@ fetch(`${API_BASE}/message`);
 ### API (Cloudflare Workers)
 - **フレームワーク**: Hono
 - **言語**: TypeScript
-- **デプロイツール**: Wrangler CLI
-- **CORS**: 有効（フロントエンドアクセス用）
 
 ### Web (Cloudflare Pages)
 - **フレームワーク**: Vite + React
@@ -102,42 +93,14 @@ fetch(`${API_BASE}/message`);
 
 ### CI/CD
 - **プラットフォーム**: GitHub Actions
-- **トリガー**: `master`ブランチへのpush
+- **トリガー**: GithubへのPush
 - **デプロイ先**: Cloudflare Workers + Pages
 
-## Wrangler CLIについて
 
-**Wrangler** = Cloudflareの公式開発ツール
-
-### 用途
-1. **Workers開発**: `wrangler dev` でローカルサーバー起動
-2. **型生成**: TypeScript型定義の自動生成
-3. **デプロイ**: CI/CDでの自動デプロイに使用
-4. **設定管理**: `wrangler.toml`での環境設定
 
 ### 主要コマンド
 ```bash
 # API開発サーバー起動
 npm run dev          # = wrangler dev
 
-# 型定義生成（必要時）
-npm run cf-typegen   # = wrangler types
-```
-
-## トラブルシューティング
-
-### よくある問題
-
-1. **API接続エラー**: APIサーバーが起動していることを確認
-2. **ポート競合**: 8787, 5173が使用中でないか確認
-3. **環境変数**: `.env.local`ファイルが正しく設定されているか確認
-
-### ログ確認
-```bash
-# API ログ
-cd api && npm run dev
-
-# Web ビルドエラー
-cd web && npm run build
-```
 
