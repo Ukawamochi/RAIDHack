@@ -29,11 +29,16 @@ npm run dev
 ```bash
 cd web
 npm install        # 初回のみ
-npm start
+npm run dev
 ```
-- **ポート**: http://localhost:3000
-- **自動ブラウザ起動**: あり（通常は自動で開きます）
+- **ポート**: http://localhost:5173
+- **Web エンドポイント例**: http://localhost:5173/test-api
 - **停止方法**: Ctrl+C
+
+### 3. API/Web の同時ローカル実行
+```bash
+npm run dev
+```
 
 ### 注意事項
 - **API を先に起動**してから Web を起動してください
@@ -56,7 +61,7 @@ https://raidhack-web.pages.dev/
 **フロントエンドの環境変数の仕組み:**
 - ローカル開発: `.env.local` → `http://localhost:8787`
 - 本番環境: CI/CD環境変数 → `https://raidhack-api.ukawamochi5.workers.dev`
-- フロントエンドでは `process.env.REACT_APP_API_BASE` を使用
+- フロントエンドでは `import.meta.env.VITE_API_BASE` を使用
 
 | ファイル | 用途 | 値 |
 |---------|------|-----|

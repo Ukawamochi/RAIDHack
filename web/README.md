@@ -38,7 +38,7 @@ npm run build
 
 ## 環境変数
 
-- `REACT_APP_API_BASE`: APIのベースURL
+- `VITE_API_BASE`: APIのベースURL
   - ローカル開発: `http://localhost:8787` (自動設定)
   - 本番環境: `https://raidhack-api.ukawamochi5.workers.dev` (CI/CDで設定)
 

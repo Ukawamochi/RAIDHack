@@ -86,7 +86,7 @@ jobs:
                   cd web
                   npm run build
               env:
-                  REACT_APP_API_BASE: ${{ needs.deploy-api.outputs.api-url }}
+                  VITE_API_BASE: ${{ needs.deploy-api.outputs.api-url }}
 
             - name: Deploy to Cloudflare Pages
               id: deploy-pages

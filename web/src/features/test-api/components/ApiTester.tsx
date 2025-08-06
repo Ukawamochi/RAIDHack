@@ -1,24 +1,41 @@
 import { useState } from 'react'
+import type { ApiResponse } from '../../../types/api'
+
+interface TestResult {
+  success: boolean
+  message: string
+  data?: Record<string, unknown>
+}
 
 function ApiTester() {
-  const [result, setResult] = useState('ここに結果が表示されます')
+  const [result, setResult] = useState<TestResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const testApi = async () => {
     setIsLoading(true)
-    setResult('APIに接続中...')
+    setResult({ success: false, message: 'APIに接続中...' })
 
-    const isLocal = window.location.hostname === 'localhost'
-    const endpoint = isLocal 
-      ? 'http://localhost:8787/message'
-      : 'https://api.ukawamochi5.workers.dev/message'
+    const apiBase = import.meta.env.VITE_API_BASE || 'https://raidhack-api.ukawamochi5.workers.dev'
+    const endpoint = `${apiBase}/message`
 
     try {
       const response = await fetch(endpoint)
-      const text = await response.text()
-      setResult(`✅ 成功: ${text}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data: ApiResponse = await response.json()
+      setResult({
+        success: true,
+        message: data.message,
+        data: data.data
+      })
     } catch (error) {
-      setResult(`❌ エラー: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      })
     } finally {
       setIsLoading(false)
     }
@@ -51,11 +68,31 @@ function ApiTester() {
       
       <div style={{
         marginTop: '20px',
-        padding: '10px',
+        padding: '15px',
         border: '1px solid #ccc',
-        minHeight: '50px'
+        borderRadius: '4px',
+        minHeight: '50px',
+        backgroundColor: '#ffffff'
       }}>
-        {result}
+        {!result ? (
+          <span style={{ color: '#666' }}>ここに結果が表示されます</span>
+        ) : (
+          <>
+            <div style={{ 
+              color: result.success ? '#28a745' : '#dc3545',
+              fontWeight: 'bold',
+              marginBottom: '8px'
+            }}>
+              {result.success ? '✅ 成功' : '❌ エラー'}
+            </div>
+            <div style={{ 
+              marginBottom: '8px',
+              color: '#333333'
+            }}>
+              {result.message}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
