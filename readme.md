@@ -34,7 +34,7 @@ npm run deploy
 ```
 ### API
 [APIのベースURL](https://api.ukawamochi5.workers.dev/)
-フロントではURLを直接埋め込まないで${API_BASE}を使ってください。Pages側で環境変数を設定するので
+フロントではURLを直接埋め込まないで${API_BASE}を使ってください。Pages側で環境変数を設定するの
 ### Web
 [Pages](https://raidhack-web.pages.dev/)
 
