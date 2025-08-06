@@ -1,39 +1,17 @@
 import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { ApiResponse, ErrorResponse } from "./types";
+import { corsMiddleware } from "./middleware/cors";
+import { errorHandler } from "./middleware/error";
+import { apiRouter } from "./routes";
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
-app.use('*', cors());
+// ミドルウェアの適用
+app.use('*', corsMiddleware);
 
-app.get("/message", (c) => {
-  try {
-    const response: ApiResponse = {
-      success: true,
-      message: "Hello from RAIDHack API! CI/CD is working!",
-      data: {
-        timestamp: new Date().toISOString(),
-        version: "1.0.0"
-      }
-    };
-    return c.json(response);
-  } catch (error) {
-    const errorResponse: ErrorResponse = {
-      success: false,
-      message: "Internal server error",
-      error: error instanceof Error ? error.message : "Unknown error"
-    };
-    return c.json(errorResponse, 500);
-  }
-});
+// ルートの設定
+app.route("/", apiRouter);
 
-app.onError((err, c) => {
-  const errorResponse: ErrorResponse = {
-    success: false,
-    message: "Something went wrong",
-    error: err.message
-  };
-  return c.json(errorResponse, 500);
-});
+// エラーハンドラーの設定
+app.onError(errorHandler);
 
 export default app;
