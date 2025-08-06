@@ -1,7 +1,3 @@
-# =======================
-# RAIDHack Project Global .gitignore
-# =======================
-
 # Dependencies
 node_modules/
 /.pnp
