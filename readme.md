@@ -64,3 +64,8 @@ https://raidhack-web.pages.dev/
 | `web/.env` | 本番フォールバック | `https://raidhack-api.ukawamochi5.workers.dev` |
 | CI/CD | 本番ビルド | `https://raidhack-api.ukawamochi5.workers.dev` |
 
+## プロジェクト構成
+
+### ファイル管理
+- **環境変数**: `web/.env.local` (ローカル用)、`web/.env` (本番フォールバック)
+
