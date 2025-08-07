@@ -1,0 +1,20 @@
+name: Test Cleanup
+
+on:
+    workflow_dispatch:
+        inputs:
+            pr_number:
+                description: 'PR number to cleanup'
+                required: true
+                type: string
+
+jobs:
+    test-cleanup:
+        runs-on: ubuntu-latest
+        name: Test Cleanup PR Environment
+        steps:
+            - name: Cleanup test
+              run: |
+                  echo "Would cleanup PR #${{ github.event.inputs.pr_number }}"
+                  echo "Worker: raidhack-api-pr-${{ github.event.inputs.pr_number }}"
+                  echo "Pages branch: pr-${{ github.event.inputs.pr_number }}"

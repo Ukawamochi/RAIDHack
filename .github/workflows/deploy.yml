@@ -7,6 +7,11 @@ on:
         branches: [ master ]  # mainからmasterに変更
         types: [ opened, synchronize, reopened, closed ]
     workflow_dispatch:
+        inputs:
+            test_cleanup:
+                description: 'Test cleanup for PR (enter PR number)'
+                required: false
+                type: string
 
 permissions:
     contents: read
@@ -148,7 +153,7 @@ jobs:
                       });
 
     cleanup:
-        if: github.event.action == 'closed'
+        if: github.event.action == 'closed' || github.event.inputs.test_cleanup != ''
         runs-on: ubuntu-latest
         name: Cleanup PR Environment
         steps:
@@ -202,7 +207,8 @@ jobs:
               run: |
                   cd web
                   PROJECT_NAME="raidhack-web"
-                  BRANCH_NAME="pr-${{ github.event.number }}"
+                  PR_NUMBER="${{ github.event.inputs.test_cleanup || github.event.number }}"
+                  BRANCH_NAME="pr-${PR_NUMBER}"
                   
                   echo "Attempting to cleanup Pages deployments for branch: $BRANCH_NAME"
                   
