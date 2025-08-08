@@ -79,7 +79,7 @@ jobs:
           cd web
           PROJECT_NAME="raidhack-web"
           echo "Deploying to production"
-          output=$(npx wrangler@latest pages deploy dist --project-name "$PROJECT_NAME" --branch "production" 2>&1)
+          output=$(npx wrangler@latest pages deploy dist --project-name "$PROJECT_NAME" --compatibility-date "2024-01-15" 2>&1)
           PAGES_URL="https://raidhack-web.pages.dev"
           echo "$output"
           actual_url=$(echo "$output" | grep -oE 'https://[a-zA-Z0-9\-\.]+\.pages\.dev' | head -1)
