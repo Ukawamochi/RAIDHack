@@ -11,10 +11,8 @@ teamRoutes.get('/me', authMiddleware, async (c) => {
 
     const teams = await c.env.DB.prepare(`
       SELECT 
-        t.id, t.idea_id, t.name, t.description, t.status, t.discord_invite_url,
-        t.created_at, t.updated_at,
-        i.title as idea_title, i.description as idea_description,
-        tm.role as my_role
+        t.id, t.idea_id, t.discord_url, t.status, t.created_at,
+        i.title as idea_title, i.description as idea_description
       FROM teams t
       JOIN team_members tm ON t.id = tm.team_id
       JOIN ideas i ON t.idea_id = i.id
@@ -27,14 +25,13 @@ teamRoutes.get('/me', authMiddleware, async (c) => {
       teams: teams.results.map((team: any) => ({
         id: team.id,
         idea_id: team.idea_id,
-        name: team.name,
-        description: team.description,
+        name: `${team.idea_title} チーム`,
+        description: team.idea_description,
         status: team.status,
-        discord_invite_url: team.discord_invite_url,
+        discord_url: team.discord_url,
         created_at: team.created_at,
-        updated_at: team.updated_at,
-        my_role: team.my_role,
         idea: {
+          id: team.idea_id,
           title: team.idea_title,
           description: team.idea_description
         }
@@ -168,7 +165,7 @@ teamRoutes.put('/:id/discord', authMiddleware, async (c) => {
   try {
     const teamId = parseInt(c.req.param('id'));
     const userId = c.get('userId') as number;
-    const { discord_invite_url } = await c.req.json();
+    const { discord_url } = await c.req.json();
 
     if (!teamId || isNaN(teamId)) {
       const errorResponse: ErrorResponse = {
@@ -207,14 +204,14 @@ teamRoutes.put('/:id/discord', authMiddleware, async (c) => {
     // Discord招待URLを更新
     await c.env.DB.prepare(`
       UPDATE teams 
-      SET discord_invite_url = ?, updated_at = CURRENT_TIMESTAMP
+      SET discord_url = ?
       WHERE id = ?
-    `).bind(discord_invite_url, teamId).run();
+    `).bind(discord_url, teamId).run();
 
     return c.json({
       success: true,
-      message: "Discord招待URLを設定しました",
-      discord_invite_url
+      message: "Discord URLを設定しました",
+      discord_url
     });
 
   } catch (error) {

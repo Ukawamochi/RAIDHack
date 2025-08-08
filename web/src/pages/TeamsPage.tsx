@@ -46,7 +46,7 @@ const TeamsPage: React.FC = () => {
 
   const fetchMyTeams = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE}/api/teams/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -72,7 +72,7 @@ const TeamsPage: React.FC = () => {
 
   const updateDiscordUrl = async (teamId: number, discordUrl: string) => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE}/api/teams/${teamId}/discord`, {
         method: 'PUT',
         headers: {
@@ -100,7 +100,7 @@ const TeamsPage: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE}/api/teams/${teamId}`, {
         method: 'DELETE',
         headers: {

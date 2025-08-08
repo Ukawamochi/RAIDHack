@@ -144,7 +144,7 @@ const CreateIdeaPage: React.FC = () => {
         throw new Error('アイデアの投稿に失敗しました');
       }
 
-      navigate('/top');
+      navigate('/ideas');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
     } finally {
@@ -277,7 +277,7 @@ const CreateIdeaPage: React.FC = () => {
           </div>
 
           <div className="form-actions">
-            <button type="button" onClick={() => navigate('/top')} className="cancel-button">
+            <button type="button" onClick={() => navigate('/ideas')} className="cancel-button">
               キャンセル
             </button>
             <button type="submit" disabled={loading} className="submit-button">

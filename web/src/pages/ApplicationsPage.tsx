@@ -9,10 +9,8 @@ interface Application {
   id: number;
   idea_id: number;
   message: string;
-  motivation: string;
   status: 'pending' | 'approved' | 'rejected';
   applied_at: string;
-  reviewed_at?: string;
   idea: {
     title: string;
     description: string;
@@ -34,7 +32,7 @@ const ApplicationsPage: React.FC = () => {
 
   const fetchMyApplications = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE}/api/applications/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -64,7 +62,7 @@ const ApplicationsPage: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE}/api/applications/${applicationId}/create-team`, {
         method: 'POST',
         headers: {
@@ -132,11 +130,6 @@ const ApplicationsPage: React.FC = () => {
                   <p className="applied-date">
                     応募日: {new Date(app.applied_at).toLocaleDateString()}
                   </p>
-                  {app.reviewed_at && (
-                    <p className="reviewed-date">
-                      審査日: {new Date(app.reviewed_at).toLocaleDateString()}
-                    </p>
-                  )}
                 </div>
                 <div className="application-status">
                   <span className={`status-badge ${app.status}`}>
@@ -150,10 +143,6 @@ const ApplicationsPage: React.FC = () => {
                 <div className="application-section">
                   <h4>応募メッセージ</h4>
                   <p>{app.message}</p>
-                </div>
-                <div className="application-section">
-                  <h4>意気込み</h4>
-                  <p>{app.motivation}</p>
                 </div>
               </div>
 

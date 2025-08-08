@@ -9,17 +9,15 @@ interface Idea {
   id: number;
   title: string;
   description: string;
-  requiredSkills: string[];
+  required_skills: string[];
+  user_id: number;
   status: 'open' | 'development' | 'completed';
-  createdAt: string;
-  updatedAt: string;
-  user: {
-    id: number;
-    username: string;
-    avatarUrl?: string;
-  };
-  likeCount: number;
-  userLiked: boolean;
+  created_at: string;
+  updated_at: string;
+  username: string;
+  avatar_url?: string;
+  like_count: number;
+  user_liked: boolean;
 }
 
 interface Work {
@@ -207,18 +205,18 @@ const TopPage: React.FC = () => {
                       </div>
                       <p className="idea-description">{idea.description}</p>
                       <div className="idea-technologies">
-                        {idea.requiredSkills.map((tech, index) => (
+                        {idea.required_skills.map((tech, index) => (
                           <span key={index} className="tech-tag">{tech}</span>
                         ))}
                       </div>
                       <div className="idea-footer">
                         <div className="idea-info">
-                          <span className="created-by">by {idea.user.username}</span>
-                          <span className="created-date">{formatDate(idea.createdAt)}</span>
+                          <span className="created-by">by {idea.username}</span>
+                          <span className="created-date">{formatDate(idea.created_at)}</span>
                         </div>
                         <div className="idea-stats">
                           <span className="application-count">
-                            ❤️ {idea.likeCount}
+                            ❤️ {idea.like_count}
                           </span>
                         </div>
                       </div>
