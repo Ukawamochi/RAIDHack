@@ -4,6 +4,8 @@ import { Bell } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import './Navbar.css'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
+
 export default function Navbar() {
   const { user, logout } = useAuth()
   const location = useLocation()
@@ -21,8 +23,8 @@ export default function Navbar() {
 
   const fetchUnreadCount = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/notifications/unread-count', {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE}/api/notifications/unread-count`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -123,17 +125,16 @@ export default function Navbar() {
             応募履歴
           </Link>
           <Link 
+            to="/discord" 
+            className={`navbar-link ${location.pathname === '/discord' ? 'active' : ''}`}
+          >
+            Discord
+          </Link>
+          <Link 
             to="/works" 
             className={`navbar-link ${location.pathname === '/works' || location.pathname === '/works/submit' ? 'active' : ''}`}
           >
             作品
-          </Link>
-          
-          <Link 
-            to="/works" 
-            className={`navbar-link ${location.pathname === '/works' ? 'active' : ''}`}
-          >
-            成果物
           </Link>
 
         </div>

@@ -67,7 +67,7 @@ notificationsRoutes.get('/unread-count', authMiddleware, async (c) => {
 
     return c.json({
       success: true,
-      unread_count: result?.count || 0
+      count: result?.count || 0
     });
 
   } catch (error) {

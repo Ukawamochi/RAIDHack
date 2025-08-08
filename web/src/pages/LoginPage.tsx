@@ -106,11 +106,11 @@ export default function LoginPage() {
         <div className="auth-demo">
           <p className="demo-text">デモアカウントでお試し</p>
           <button 
-            onClick={() => setFormData({ email: 'demo@example.com', password: 'demo123' })}
+            onClick={() => setFormData({ email: 'raid@example.com', password: 'password' })}
             className="btn btn-outline btn-full"
             type="button"
           >
-            デモアカウントを使用
+            デモアカウントを使用（raid@example.com）
           </button>
         </div>
 

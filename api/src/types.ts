@@ -96,6 +96,7 @@ export interface CreateIdeaRequest {
 
 export interface IdeasResponse {
   success: true;
+  message?: string;
   ideas: Idea[];
   pagination: {
     page: number;
@@ -107,6 +108,7 @@ export interface IdeasResponse {
 
 export interface IdeaResponse {
   success: true;
+  message?: string;
   idea: Idea;
 }
 

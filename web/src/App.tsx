@@ -120,6 +120,14 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route 
+                path="/discord" 
+                element={
+                  <ProtectedRoute>
+                    <DiscordPage />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </main>
         </div>

@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import Navbar from '../components/Navbar';
 import './CreateIdeaPage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
@@ -23,24 +21,24 @@ const categories = [
   'ゲーム',
   'IoTデバイス',
   'データ分析',
-  'ブロックチェーン',
-  'VR/AR',
   'その他'
 ];
 
 const durations = [
-  '1日',
-  '2-3日',
   '1週間',
   '2週間',
   '1ヶ月',
-  'その他'
+  '2ヶ月',
+  '3ヶ月',
+  '長期'
 ];
 
 const CreateIdeaPage: React.FC = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [techInput, setTechInput] = useState('');
+
   const [formData, setFormData] = useState<IdeaFormData>({
     title: '',
     description: '',
@@ -50,38 +48,33 @@ const CreateIdeaPage: React.FC = () => {
     duration: '',
     requirements: ''
   });
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [techInput, setTechInput] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'teamSize' ? parseInt(value) || 1 : value
+      [name]: name === 'teamSize' ? parseInt(value) : value
     }));
   };
 
   const addTechnology = () => {
-    const tech = techInput.trim();
-    if (tech && !formData.technologies.includes(tech)) {
+    if (techInput.trim() && !formData.technologies.includes(techInput.trim())) {
       setFormData(prev => ({
         ...prev,
-        technologies: [...prev.technologies, tech]
+        technologies: [...prev.technologies, techInput.trim()]
       }));
       setTechInput('');
     }
   };
 
-  const removeTechnology = (techToRemove: string) => {
+  const removeTechnology = (tech: string) => {
     setFormData(prev => ({
       ...prev,
-      technologies: prev.technologies.filter(tech => tech !== techToRemove)
+      technologies: prev.technologies.filter(t => t !== tech)
     }));
   };
 
-  const handleTechKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       addTechnology();
@@ -118,8 +111,7 @@ const CreateIdeaPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
+    
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -127,232 +119,181 @@ const CreateIdeaPage: React.FC = () => {
     }
 
     setLoading(true);
+    setError(null);
 
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('認証が必要です');
+      }
+
       const response = await fetch(`${API_BASE}/api/ideas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ...formData,
-          createdBy: user?.username
+          title: formData.title,
+          description: formData.description,
+          required_skills: formData.technologies
         })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'アイデアの投稿に失敗しました');
+        throw new Error('アイデアの投稿に失敗しました');
       }
 
-      const ideaData = await response.json();
-      navigate(`/ideas/${ideaData.id}`);
+      navigate('/ideas');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'アイデアの投稿に失敗しました');
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="create-idea-page">
-        <div className="create-idea-container">
-          <div className="create-idea-header">
-            <h1>新しいアイデアを投稿</h1>
-            <p>あなたのアイデアを共有して、一緒に作ってくれる仲間を見つけましょう</p>
+    <div className="create-idea-page">
+      <div className="create-idea-container">
+        <div className="create-idea-header">
+          <h1>新しいアイデアを投稿</h1>
+          <p>あなたのアイデアを共有して、一緒に作ってくれる仲間を見つけましょう</p>
+        </div>
+
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="create-idea-form">
+          <div className="form-group">
+            <label htmlFor="title">アイデアタイトル *</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              placeholder="革新的なWebアプリのアイデア"
+              required
+            />
           </div>
 
-          {error && (
-            <div className="error-message">
-              <span className="error-icon">⚠️</span>
-              {error}
-            </div>
-          )}
+          <div className="form-group">
+            <label htmlFor="description">詳細説明 *</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="アイデアの詳細、解決したい課題、想定するユーザーなどを詳しく説明してください"
+              rows={6}
+              required
+            />
+          </div>
 
-          <form onSubmit={handleSubmit} className="create-idea-form">
-            <div className="form-section">
-              <h2>基本情報</h2>
-              
-              <div className="form-group">
-                <label htmlFor="title">アイデアのタイトル *</label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="魅力的なタイトルを入力してください"
-                  disabled={loading}
-                  required
-                />
-                <span className="field-help">5文字以上で入力してください</span>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="description">アイデアの説明 *</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="あなたのアイデアについて詳しく説明してください。どんな問題を解決し、どのような価値を提供するのかを書いてください。"
-                  disabled={loading}
-                  rows={6}
-                  required
-                />
-                <span className="field-help">20文字以上で入力してください</span>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="category">カテゴリ *</label>
-                  <select
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    disabled={loading}
-                    required
-                  >
-                    <option value="">カテゴリを選択</option>
-                    {categories.map((category, index) => (
-                      <option key={index} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="duration">開発期間 *</label>
-                  <select
-                    id="duration"
-                    name="duration"
-                    value={formData.duration}
-                    onChange={handleChange}
-                    disabled={loading}
-                    required
-                  >
-                    <option value="">期間を選択</option>
-                    {durations.map((duration, index) => (
-                      <option key={index} value={duration}>{duration}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="teamSize">チームサイズ *</label>
-                <input
-                  type="number"
-                  id="teamSize"
-                  name="teamSize"
-                  value={formData.teamSize}
-                  onChange={handleChange}
-                  min="1"
-                  max="10"
-                  disabled={loading}
-                  required
-                />
-                <span className="field-help">あなたを含めた希望チーム人数（1〜10人）</span>
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h2>技術スタック</h2>
-              
-              <div className="form-group">
-                <label>使用予定の技術 *</label>
-                <div className="tech-input-area">
-                  <div className="tech-input-container">
-                    <input
-                      type="text"
-                      className="tech-input"
-                      value={techInput}
-                      onChange={(e) => setTechInput(e.target.value)}
-                      onKeyPress={handleTechKeyPress}
-                      placeholder="技術名を入力（例: React, Python, Firebase）"
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      className="add-tech-btn"
-                      onClick={addTechnology}
-                      disabled={loading || !techInput.trim()}
-                    >
-                      追加
-                    </button>
-                  </div>
-                  
-                  {formData.technologies.length > 0 && (
-                    <div className="technologies-list">
-                      {formData.technologies.map((tech, index) => (
-                        <span key={index} className="tech-tag">
-                          {tech}
-                          <button
-                            type="button"
-                            className="tech-remove"
-                            onClick={() => removeTechnology(tech)}
-                            disabled={loading}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <span className="field-help">少なくとも1つの技術を追加してください</span>
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h2>募集要項</h2>
-              
-              <div className="form-group">
-                <label htmlFor="requirements">求めるスキル・経験</label>
-                <textarea
-                  id="requirements"
-                  name="requirements"
-                  value={formData.requirements}
-                  onChange={handleChange}
-                  placeholder="どのようなスキルや経験を持つメンバーを求めているか記載してください。初心者歓迎、特定技術の経験者など。"
-                  disabled={loading}
-                  rows={4}
-                />
-                <span className="field-help">任意項目です</span>
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                onClick={() => navigate('/top')}
-                className="btn btn-outline"
-                disabled={loading}
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="category">カテゴリ *</label>
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                required
               >
-                キャンセル
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="loading-spinner small"></span>
-                    投稿中...
-                  </>
-                ) : (
-                  'アイデアを投稿'
-                )}
-              </button>
+                <option value="">選択してください</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
-          </form>
-        </div>
+
+            <div className="form-group">
+              <label htmlFor="duration">開発期間 *</label>
+              <select
+                id="duration"
+                name="duration"
+                value={formData.duration}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">選択してください</option>
+                {durations.map(dur => (
+                  <option key={dur} value={dur}>{dur}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="teamSize">希望チームサイズ *</label>
+            <input
+              type="number"
+              id="teamSize"
+              name="teamSize"
+              value={formData.teamSize}
+              onChange={handleInputChange}
+              min="1"
+              max="10"
+              required
+            />
+            <small>自分を含む総人数（1〜10人）</small>
+          </div>
+
+          <div className="form-group">
+            <label>必要な技術スタック *</label>
+            <div className="tech-input-container">
+              <input
+                type="text"
+                value={techInput}
+                onChange={(e) => setTechInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="React, Node.js, Python など"
+              />
+              <button type="button" onClick={addTechnology}>追加</button>
+            </div>
+            <div className="tech-tags">
+              {formData.technologies.map(tech => (
+                <span key={tech} className="tech-tag">
+                  {tech}
+                  <button type="button" onClick={() => removeTechnology(tech)}>×</button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="requirements">参加条件・その他要望</label>
+            <textarea
+              id="requirements"
+              name="requirements"
+              value={formData.requirements}
+              onChange={handleInputChange}
+              placeholder="特定のスキルレベル、コミット時間、コミュニケーション方法などの要望があれば記載してください"
+              rows={3}
+            />
+          </div>
+
+          <div className="form-actions">
+            <button type="button" onClick={() => navigate('/ideas')} className="cancel-button">
+              キャンセル
+            </button>
+            <button type="submit" disabled={loading} className="submit-button">
+              {loading ? (
+                <>
+                  <span className="loading-spinner small"></span>
+                  投稿中...
+                </>
+              ) : (
+                'アイデアを投稿'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 };
 
