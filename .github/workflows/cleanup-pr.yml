@@ -49,14 +49,17 @@ jobs:
           WORKER_NAME="raidhack-api-pr-$PR_NUMBER"
           echo "Attempting to delete Worker: $WORKER_NAME"
 
-          if npx wrangler whoami > /dev/null 2>&1; then
+          if npx wrangler@latest whoami > /dev/null 2>&1; then
             echo "Wrangler authentication successful"
-            if npx wrangler list | grep -q "$WORKER_NAME"; then
-              echo "Worker $WORKER_NAME found, deleting..."
-              npx wrangler delete "$WORKER_NAME" --force
-              echo "Worker $WORKER_NAME deleted successfully"
+            echo "Deleting worker idempotently (will succeed even if absent)..."
+            delete_output=$(npx wrangler@latest delete --name "$WORKER_NAME" --force 2>&1 || true)
+            echo "$delete_output"
+            if echo "$delete_output" | grep -qiE 'deleted|success'; then
+              echo "Worker deletion confirmed"
+            elif echo "$delete_output" | grep -qiE 'not found|could not find|404'; then
+              echo "Worker already absent"
             else
-              echo "Worker $WORKER_NAME not found, already deleted or never existed"
+              echo "Worker delete attempted; unable to confirm from output"
             fi
           else
             echo "Wrangler authentication failed"
@@ -86,8 +89,9 @@ jobs:
             if npx wrangler@latest pages project list | grep -q "$PROJECT_NAME"; then
               echo "Pages project $PROJECT_NAME found"
               echo "Getting deployment IDs for branch: $BRANCH_NAME"
-              DEPLOYMENT_IDS=$(npx wrangler@latest pages deployment list --project-name "$PROJECT_NAME" --format json 2>/dev/null | \
-                jq -r --arg branch "$BRANCH_NAME" '.[] | select(.deployment_trigger.metadata.branch == $branch) | .id' 2>/dev/null || echo "")
+              JSON=$(npx wrangler@latest pages deployments list --project-name "$PROJECT_NAME" --format json 2>/dev/null || echo "[]")
+              echo "$JSON" | head -c 5000 >/dev/null # avoid flooding logs
+              DEPLOYMENT_IDS=$(echo "$JSON" | jq -r --arg branch "$BRANCH_NAME" '.[] | select((.deployment_trigger.metadata.branch // "") == $branch) | .id' 2>/dev/null || echo "")
               if [ -n "$DEPLOYMENT_IDS" ]; then
                 echo "Found deployment IDs for branch $BRANCH_NAME:"
                 echo "$DEPLOYMENT_IDS"
@@ -122,24 +126,35 @@ jobs:
           echo "PR Number: $PR_NUMBER"
           echo "Expected Worker Name: raidhack-api-pr-$PR_NUMBER"
           echo "Expected Pages Branch: pr-$PR_NUMBER"
-
-          cd api
-          echo "Checking if Worker still exists..."
-          if npx wrangler list | grep -q "raidhack-api-pr-$PR_NUMBER"; then
-            echo "⚠️ WARNING: Worker still exists"
+          echo "Checking Worker reachability..."
+          URL="https://raidhack-api-pr-$PR_NUMBER.ukawamochi5.workers.dev"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || echo "000")
+          echo "Worker HTTP status: $STATUS"
+          if [ "$STATUS" = "404" ] || [ "$STATUS" = "000" ]; then
+            echo "✅ Worker appears deleted or unreachable"
           else
-            echo "✅ Worker successfully deleted"
+            echo "⚠️ WARNING: Worker may still be reachable ($STATUS)"
           fi
 
-          cd ../web
+          cd web
           echo "Checking Pages deployments..."
-          REMAINING=$(npx wrangler@latest pages deployment list --project-name "raidhack-web" --format json 2>/dev/null | \
-            jq -r --arg branch "pr-$PR_NUMBER" '.[] | select(.deployment_trigger.metadata.branch == $branch) | .id' 2>/dev/null | wc -l || echo "0")
+          REMAINING=$(npx wrangler@latest pages deployments list --project-name "raidhack-web" --format json 2>/dev/null | \
+            jq -r --arg branch "pr-$PR_NUMBER" '.[] | select((.deployment_trigger.metadata.branch // "") == $branch) | .id' 2>/dev/null | wc -l || echo "0")
 
           if [ "$REMAINING" -gt 0 ]; then
             echo "⚠️ WARNING: $REMAINING Pages deployments still exist for this PR"
           else
             echo "✅ All Pages deployments successfully deleted"
+          fi
+
+          echo "Checking Pages preview URL reachability..."
+          PREVIEW_URL="https://pr-$PR_NUMBER.raidhack-web.pages.dev"
+          PSTATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL" || echo "000")
+          echo "Pages preview HTTP status: $PSTATUS"
+          if [ "$PSTATUS" = "404" ] || [ "$PSTATUS" = "530" ] || [ "$PSTATUS" = "000" ]; then
+            echo "✅ Pages preview appears deleted or unreachable"
+          else
+            echo "⚠️ WARNING: Pages preview may still be reachable ($PSTATUS)"
           fi
           echo "=== Cleanup Verification Complete ==="
         env:
