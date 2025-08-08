@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './TopPage.css';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
+
 interface Idea {
   id: number;
   title: string;
@@ -51,14 +53,14 @@ const TopPage: React.FC = () => {
       setLoading(true);
       
       // アイデア一覧を取得
-      const ideasResponse = await fetch('http://localhost:8787/api/ideas', {
+      const ideasResponse = await fetch(`${API_BASE}/api/ideas`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       
       // 作品一覧を取得
-      const worksResponse = await fetch('http://localhost:8787/api/works', {
+      const worksResponse = await fetch(`${API_BASE}/api/works`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -83,7 +85,7 @@ const TopPage: React.FC = () => {
 
   const handleVote = async (workId: number) => {
     try {
-      const response = await fetch(`http://localhost:8787/api/works/${workId}/vote`, {
+      const response = await fetch(`${API_BASE}/api/works/${workId}/vote`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -150,11 +152,11 @@ const TopPage: React.FC = () => {
               <Link to="/create" className="btn btn-primary">
                 アイデア投稿
               </Link>
-              {/* TODO: Discord統合 - 後で実装
+              
               <Link to="/discord" className="btn btn-outline">
                 Discord
               </Link>
-              */}
+
             </div>
           </div>
 
@@ -221,21 +223,13 @@ const TopPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="idea-actions">
-                        {/* TODO: アイデア詳細ページ - 後で実装
+                        
                         <Link 
                           to={`/ideas/${idea.id}`} 
                           className="btn btn-outline"
                         >
                           詳細を見る
                         </Link>
-                        */}
-                        <button 
-                          className="btn btn-outline" 
-                          disabled
-                          title="詳細ページは開発中です"
-                        >
-                          詳細を見る（開発中）
-                        </button>
                         {idea.status === 'open' && (
                           <button className="btn btn-primary">
                             参加申請

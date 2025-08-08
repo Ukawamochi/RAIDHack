@@ -301,3 +301,276 @@ ideaRoutes.post('/:id/like', authMiddleware, async (c) => {
     return c.json(errorResponse, 500);
   }
 });
+
+// アイデアへの応募
+ideaRoutes.post('/:id/apply', authMiddleware, async (c) => {
+  try {
+    const ideaId = parseInt(c.req.param('id'));
+    const userId = c.get('userId') as number;
+    const { message, motivation } = await c.req.json();
+
+    if (!ideaId || isNaN(ideaId)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なアイデアIDです",
+        error: "Invalid idea ID"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // アイデアの存在確認と詳細取得
+    const idea = await c.env.DB.prepare(`
+      SELECT id, title, user_id, status 
+      FROM ideas 
+      WHERE id = ?
+    `).bind(ideaId).first();
+
+    if (!idea) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "アイデアが見つかりません",
+        error: "Idea not found"
+      };
+      return c.json(errorResponse, 404);
+    }
+
+    // 自分のアイデアには応募できない
+    if (idea.user_id === userId) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "自分のアイデアには応募できません",
+        error: "Cannot apply to own idea"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // アイデアがオープン状態でない場合は応募できない
+    if (idea.status !== 'open') {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "このアイデアは現在応募を受け付けていません",
+        error: "Idea is not open for applications"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // 既に応募済みかチェック
+    const existingApplication = await c.env.DB.prepare(
+      "SELECT id FROM applications WHERE idea_id = ? AND applicant_id = ?"
+    ).bind(ideaId, userId).first();
+
+    if (existingApplication) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "既にこのアイデアに応募済みです",
+        error: "Already applied to this idea"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // 応募を作成
+    const applicationResult = await c.env.DB.prepare(`
+      INSERT INTO applications (idea_id, applicant_id, message, motivation, status, applied_at)
+      VALUES (?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
+    `).bind(ideaId, userId, message || '', motivation || '').run();
+
+    return c.json({
+      success: true,
+      message: "応募を送信しました",
+      application: {
+        id: applicationResult.meta.last_row_id,
+        idea_id: ideaId,
+        status: 'pending'
+      }
+    });
+
+  } catch (error) {
+    console.error('Application error:', error);
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "応募処理中にエラーが発生しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});
+
+// アイデアの応募一覧取得（アイデア作成者のみ）
+ideaRoutes.get('/:id/applications', authMiddleware, async (c) => {
+  try {
+    const ideaId = parseInt(c.req.param('id'));
+    const userId = c.get('userId') as number;
+
+    if (!ideaId || isNaN(ideaId)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なアイデアIDです",
+        error: "Invalid idea ID"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // アイデアの所有者確認
+    const idea = await c.env.DB.prepare(
+      "SELECT user_id FROM ideas WHERE id = ?"
+    ).bind(ideaId).first();
+
+    if (!idea) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "アイデアが見つかりません",
+        error: "Idea not found"
+      };
+      return c.json(errorResponse, 404);
+    }
+
+    if (idea.user_id !== userId) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "このアイデアの応募一覧を表示する権限がありません",
+        error: "Not authorized to view applications"
+      };
+      return c.json(errorResponse, 403);
+    }
+
+    // 応募一覧を取得
+    const applications = await c.env.DB.prepare(`
+      SELECT 
+        a.id, a.message, a.motivation, a.status, a.applied_at, a.reviewed_at,
+        u.id as applicant_id, u.username, u.email, u.bio, u.skills, u.avatar_url
+      FROM applications a
+      JOIN users u ON a.applicant_id = u.id
+      WHERE a.idea_id = ?
+      ORDER BY a.applied_at DESC
+    `).bind(ideaId).all();
+
+    return c.json({
+      success: true,
+      applications: applications.results.map((app: any) => ({
+        id: app.id,
+        message: app.message,
+        motivation: app.motivation,
+        status: app.status,
+        applied_at: app.applied_at,
+        reviewed_at: app.reviewed_at,
+        applicant: {
+          id: app.applicant_id,
+          username: app.username,
+          email: app.email,
+          bio: app.bio,
+          skills: app.skills ? JSON.parse(app.skills) : [],
+          avatar_url: app.avatar_url
+        }
+      }))
+    });
+
+  } catch (error) {
+    console.error('Get applications error:', error);
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "応募一覧取得中にエラーが発生しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});
+
+// 応募の承認/拒否
+ideaRoutes.put('/:id/applications/:applicationId', authMiddleware, async (c) => {
+  try {
+    const ideaId = parseInt(c.req.param('id'));
+    const applicationId = parseInt(c.req.param('applicationId'));
+    const userId = c.get('userId') as number;
+    const { action, message } = await c.req.json(); // action: 'approve' | 'reject'
+
+    if (!ideaId || isNaN(ideaId) || !applicationId || isNaN(applicationId)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なIDです",
+        error: "Invalid ID"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    if (!['approve', 'reject'].includes(action)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なアクションです",
+        error: "Invalid action"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // アイデアの所有者確認
+    const idea = await c.env.DB.prepare(
+      "SELECT user_id FROM ideas WHERE id = ?"
+    ).bind(ideaId).first();
+
+    if (!idea) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "アイデアが見つかりません",
+        error: "Idea not found"
+      };
+      return c.json(errorResponse, 404);
+    }
+
+    if (idea.user_id !== userId) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "この応募を審査する権限がありません",
+        error: "Not authorized to review application"
+      };
+      return c.json(errorResponse, 403);
+    }
+
+    // 応募の存在確認
+    const application = await c.env.DB.prepare(
+      "SELECT id, status FROM applications WHERE id = ? AND idea_id = ?"
+    ).bind(applicationId, ideaId).first();
+
+    if (!application) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "応募が見つかりません",
+        error: "Application not found"
+      };
+      return c.json(errorResponse, 404);
+    }
+
+    if (application.status !== 'pending') {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "この応募は既に審査済みです",
+        error: "Application already reviewed"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // 応募ステータスを更新
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    await c.env.DB.prepare(`
+      UPDATE applications 
+      SET status = ?, review_message = ?, reviewed_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(newStatus, message || '', applicationId).run();
+
+    return c.json({
+      success: true,
+      message: action === 'approve' ? "応募を承認しました" : "応募を拒否しました",
+      application: {
+        id: applicationId,
+        status: newStatus
+      }
+    });
+
+  } catch (error) {
+    console.error('Review application error:', error);
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "応募審査中にエラーが発生しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});

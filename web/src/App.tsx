@@ -10,10 +10,14 @@ import RegisterPage from './pages/RegisterPage'
 import TopPage from './pages/TopPage'
 import ProfilePage from './pages/ProfilePage'
 import CreateIdeaPage from './pages/CreateIdeaPage'
-// TODO: 未実装ページ - 後で実装
-// import IdeaDetailPage from './pages/IdeaDetailPage'
-// import WorksPage from './pages/WorksPage'
-// import DiscordPage from './pages/DiscordPage'
+import IdeaDetailPage from './pages/IdeaDetailPage'
+import ApplicationsPage from './pages/ApplicationsPage'
+import TeamsPage from './pages/TeamsPage'
+import WorksPage from './pages/WorksPage'
+import WorkSubmitPage from './pages/WorkSubmitPage'
+import { NotificationsPage } from './pages/NotificationsPage'
+import { AdminDashboard } from './pages/AdminDashboard'
+import DiscordPage from './pages/DiscordPage'
 
 import './App.css'
 
@@ -52,12 +56,27 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-              {/* TODO: 未実装ページのルート - 後で有効化
               <Route 
                 path="/ideas/:id" 
                 element={
                   <ProtectedRoute>
                     <IdeaDetailPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/applications" 
+                element={
+                  <ProtectedRoute>
+                    <ApplicationsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/teams" 
+                element={
+                  <ProtectedRoute>
+                    <TeamsPage />
                   </ProtectedRoute>
                 } 
               />
@@ -70,6 +89,30 @@ function App() {
                 } 
               />
               <Route 
+                path="/works/submit" 
+                element={
+                  <ProtectedRoute>
+                    <WorkSubmitPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/notifications" 
+                element={
+                  <ProtectedRoute>
+                    <NotificationsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/discord/:teamId" 
                 element={
                   <ProtectedRoute>
@@ -77,7 +120,6 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-              */}
             </Routes>
           </main>
         </div>

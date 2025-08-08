@@ -1,11 +1,41 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Bell } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import './Navbar.css'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount()
+      // 30秒ごとに未読数を更新
+      const interval = setInterval(fetchUnreadCount, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [user])
+
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch('/api/notifications/unread-count', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setUnreadCount(data.count)
+      }
+    } catch (error) {
+      console.error('未読通知数の取得に失敗しました:', error)
+    }
+  }
 
   const handleLogout = () => {
     logout()
@@ -80,17 +110,49 @@ export default function Navbar() {
           >
             アイデア投稿
           </Link>
-          {/* TODO: 未実装ページ - 後で有効化
+          <Link 
+            to="/teams" 
+            className={`navbar-link ${location.pathname === '/teams' ? 'active' : ''}`}
+          >
+            チーム
+          </Link>
+          <Link 
+            to="/applications" 
+            className={`navbar-link ${location.pathname === '/applications' ? 'active' : ''}`}
+          >
+            応募履歴
+          </Link>
+          <Link 
+            to="/works" 
+            className={`navbar-link ${location.pathname === '/works' || location.pathname === '/works/submit' ? 'active' : ''}`}
+          >
+            作品
+          </Link>
+          
           <Link 
             to="/works" 
             className={`navbar-link ${location.pathname === '/works' ? 'active' : ''}`}
           >
             成果物
           </Link>
-          */}
+
         </div>
 
         <div className="navbar-user">
+          {/* 通知ベル */}
+          <Link 
+            to="/notifications" 
+            className={`navbar-notification ${location.pathname === '/notifications' ? 'active' : ''}`}
+            title="通知"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="navbar-notification-badge">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </Link>
+          
           <Link 
             to="/profile" 
             className={`navbar-link ${location.pathname === '/profile' ? 'active' : ''}`}
