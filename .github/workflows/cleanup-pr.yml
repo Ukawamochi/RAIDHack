@@ -49,14 +49,17 @@ jobs:
           WORKER_NAME="raidhack-api-pr-$PR_NUMBER"
           echo "Attempting to delete Worker: $WORKER_NAME"
 
-          if npx wrangler whoami > /dev/null 2>&1; then
+          if npx wrangler@latest whoami > /dev/null 2>&1; then
             echo "Wrangler authentication successful"
-            if npx wrangler list | grep -q "$WORKER_NAME"; then
-              echo "Worker $WORKER_NAME found, deleting..."
-              npx wrangler delete "$WORKER_NAME" --force
-              echo "Worker $WORKER_NAME deleted successfully"
+            echo "Deleting worker idempotently (will succeed even if absent)..."
+            delete_output=$(npx wrangler@latest delete "$WORKER_NAME" --force 2>&1 || true)
+            echo "$delete_output"
+            if echo "$delete_output" | grep -qiE 'deleted|success'; then
+              echo "Worker deletion confirmed"
+            elif echo "$delete_output" | grep -qiE 'not found|could not find|404'; then
+              echo "Worker already absent"
             else
-              echo "Worker $WORKER_NAME not found, already deleted or never existed"
+              echo "Worker delete attempted; unable to confirm from output"
             fi
           else
             echo "Wrangler authentication failed"
@@ -122,13 +125,14 @@ jobs:
           echo "PR Number: $PR_NUMBER"
           echo "Expected Worker Name: raidhack-api-pr-$PR_NUMBER"
           echo "Expected Pages Branch: pr-$PR_NUMBER"
-
-          cd api
-          echo "Checking if Worker still exists..."
-          if npx wrangler list | grep -q "raidhack-api-pr-$PR_NUMBER"; then
-            echo "⚠️ WARNING: Worker still exists"
+          echo "Checking Worker reachability..."
+          URL="https://raidhack-api-pr-$PR_NUMBER.ukawamochi5.workers.dev"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || echo "000")
+          echo "Worker HTTP status: $STATUS"
+          if [ "$STATUS" = "404" ] || [ "$STATUS" = "000" ]; then
+            echo "✅ Worker appears deleted or unreachable"
           else
-            echo "✅ Worker successfully deleted"
+            echo "⚠️ WARNING: Worker may still be reachable ($STATUS)"
           fi
 
           cd ../web
