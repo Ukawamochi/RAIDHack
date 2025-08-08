@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import './IdeaDetailPage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
@@ -52,22 +52,10 @@ const IdeaDetailPage: React.FC = () => {
     motivation: ''
   });
 
-  useEffect(() => {
-    if (id) {
-      fetchIdeaDetail();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (user && idea && idea.user_id === user.id) {
-      fetchApplications();
-    }
-  }, [user, idea]);
-
   const fetchIdeaDetail = React.useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8787/api/ideas/${id}`, {
+      const response = await fetch(`${API_BASE}/api/ideas/${id}`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
         },
@@ -83,7 +71,8 @@ const IdeaDetailPage: React.FC = () => {
       } else {
         setError('アイデアが見つかりません');
       }
-    } catch (_err) {
+    } catch (err) {
+      console.error('Fetch idea error:', err);
       setError('ネットワークエラーが発生しました');
     } finally {
       setLoading(false);
@@ -93,7 +82,7 @@ const IdeaDetailPage: React.FC = () => {
   const fetchApplications = React.useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8787/api/ideas/${id}/applications`, {
+      const response = await fetch(`${API_BASE}/api/ideas/${id}/applications`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -105,10 +94,22 @@ const IdeaDetailPage: React.FC = () => {
           setApplications(data.applications);
         }
       }
-    } catch (_err) {
-      console.error('Failed to fetch applications:', _err);
+    } catch (err) {
+      console.error('Failed to fetch applications:', err);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchIdeaDetail();
+    }
+  }, [id, fetchIdeaDetail]);
+
+  useEffect(() => {
+    if (user && idea && idea.user_id === user.id) {
+      fetchApplications();
+    }
+  }, [user, idea, fetchApplications]);
 
   const handleApply = async () => {
     if (!user) {
@@ -119,7 +120,7 @@ const IdeaDetailPage: React.FC = () => {
     setApplyLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8787/api/ideas/${id}/apply`, {
+      const response = await fetch(`${API_BASE}/api/ideas/${id}/apply`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -153,7 +154,7 @@ const IdeaDetailPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8787/api/ideas/${id}/like`, {
+      const response = await fetch(`${API_BASE}/api/ideas/${id}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -172,7 +173,7 @@ const IdeaDetailPage: React.FC = () => {
   const handleApplicationReview = async (applicationId: number, action: 'approve' | 'reject', message: string = '') => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8787/api/ideas/${id}/applications/${applicationId}`, {
+      const response = await fetch(`${API_BASE}/api/ideas/${id}/applications/${applicationId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

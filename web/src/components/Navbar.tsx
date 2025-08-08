@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { Bell } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import './Navbar.css'

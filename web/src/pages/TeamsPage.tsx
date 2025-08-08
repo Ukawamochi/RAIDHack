@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import './TeamsPage.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';

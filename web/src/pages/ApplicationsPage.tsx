@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import './ApplicationsPage.css';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
 interface Application {
   id: number;
@@ -33,7 +35,7 @@ const ApplicationsPage: React.FC = () => {
   const fetchMyApplications = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:8787/api/applications/me', {
+      const response = await fetch(`${API_BASE}/api/applications/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -63,7 +65,7 @@ const ApplicationsPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8787/api/applications/${applicationId}/create-team`, {
+      const response = await fetch(`${API_BASE}/api/applications/${applicationId}/create-team`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

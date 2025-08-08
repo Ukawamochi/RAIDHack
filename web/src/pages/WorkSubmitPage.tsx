@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import './WorkSubmitPage.css';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
 interface Team {
   id: number;
@@ -42,7 +44,7 @@ const WorkSubmitPage: React.FC = () => {
   const fetchMyTeams = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:8787/api/teams/me', {
+      const response = await fetch(`${API_BASE}/api/teams/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -81,7 +83,7 @@ const WorkSubmitPage: React.FC = () => {
       const teamMemberIds = selectedTeam?.members.map(member => member.id) || [];
 
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:8787/api/works', {
+      const response = await fetch(`${API_BASE}/api/works`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

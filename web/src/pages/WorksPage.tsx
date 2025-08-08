@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import './WorksPage.css';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
 interface Work {
   id: number;
@@ -35,7 +37,7 @@ const WorksPage: React.FC = () => {
   const fetchWorks = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:8787/api/works', {
+      const response = await fetch(`${API_BASE}/api/works`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
         },
@@ -64,7 +66,7 @@ const WorksPage: React.FC = () => {
     setVotingId(workId);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:8787/api/works/${workId}/vote`, {
+      const response = await fetch(`${API_BASE}/api/works/${workId}/vote`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

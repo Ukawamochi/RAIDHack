@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import Navbar from '../components/Navbar';
 import './CreateIdeaPage.css';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
 interface IdeaFormData {
   title: string;
@@ -127,7 +129,7 @@ const CreateIdeaPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8787/api/ideas', {
+      const response = await fetch(`${API_BASE}/api/ideas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
