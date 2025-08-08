@@ -12,12 +12,12 @@ INSERT INTO users (email, username, password_hash, bio, skills) VALUES
 ('eva@example.com', 'eva_ai', '$2b$10$rQX.YQlZ4fEbgKX9zGJXBuVKj9xwJL2/8yNf5LpLdcfNRVtxFxu0e', 'AI/ML エンジニア', '["Python", "TensorFlow", "PyTorch"]');
 
 -- サンプルアイデア
-INSERT INTO ideas (title, description, technologies, created_by, max_members, status, likes) VALUES
-('タスク管理アプリ', 'チーム向けの効率的なタスク管理ツール。リアルタイム同期とカンバンボード機能を持つ。', '["React", "Node.js", "Socket.io", "MongoDB"]', 1, 4, 'recruiting', 23),
-('AIチャットボット', '自然言語処理を活用した顧客サポートチャットボット。企業向けのカスタマイズ可能なソリューション。', '["Python", "OpenAI", "FastAPI", "Redis"]', 2, 3, 'recruiting', 45),
-('健康管理アプリ', '食事記録と運動ログを統合した健康管理アプリ。AIによる栄養アドバイス機能付き。', '["React Native", "Python", "TensorFlow", "SQLite"]', 3, 5, 'development', 67),
-('ECサイト構築ツール', 'ノーコードでECサイトを構築できるプラットフォーム。ドラッグ&ドロップでデザイン可能。', '["Vue.js", "Laravel", "MySQL", "Stripe"]', 1, 6, 'recruiting', 34),
-('音楽共有SNS', '音楽好きのためのSNSプラットフォーム。プレイリスト共有とリアルタイム音楽セッション機能。', '["React", "Node.js", "WebRTC", "Spotify API"]', 4, 4, 'completed', 89);
+INSERT INTO ideas (title, description, required_skills, user_id, status) VALUES
+('タスク管理アプリ', 'チーム向けの効率的なタスク管理ツール。リアルタイム同期とカンバンボード機能を持つ。', '["React", "Node.js", "Socket.io", "MongoDB"]', 1, 'open'),
+('AIチャットボット', '自然言語処理を活用した顧客サポートチャットボット。企業向けのカスタマイズ可能なソリューション。', '["Python", "OpenAI", "FastAPI", "Redis"]', 2, 'open'),
+('健康管理アプリ', '食事記録と運動ログを統合した健康管理アプリ。AIによる栄養アドバイス機能付き。', '["React Native", "Python", "TensorFlow", "SQLite"]', 3, 'development'),
+('ECサイト構築ツール', 'ノーコードでECサイトを構築できるプラットフォーム。ドラッグ&ドロップでデザイン可能。', '["Vue.js", "Laravel", "MySQL", "Stripe"]', 1, 'open'),
+('音楽共有SNS', '音楽好きのためのSNSプラットフォーム。プレイリスト共有とリアルタイム音楽セッション機能。', '["React", "Node.js", "WebRTC", "Spotify API"]', 1, 'completed');
 
 -- サンプル応募
 INSERT INTO applications (idea_id, user_id, message, status) VALUES

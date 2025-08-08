@@ -13,6 +13,16 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "raidhack-db",
+			"database_id": "351ec61c-6b58-448f-a888-c9df33a3045f"
+		}
+	],
+	"vars": {
+		"JWT_SECRET": "your-secret-key-for-development"
 	}
 	/**
 	 * Smart Placement

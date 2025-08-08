@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import Navbar from '../components/Navbar';
 import './ProfilePage.css';
 
 interface ProfileFormData {
@@ -105,7 +104,6 @@ const ProfilePage: React.FC = () => {
 
   return (
     <>
-      <Navbar />
       <div className="profile-page">
         <div className="profile-container">
           <div className="profile-header">
