@@ -3,12 +3,24 @@
 	"type": "module",
 	"scripts": {
 		"dev": "wrangler dev",
+		"build": "wrangler deploy --dry-run",
+		"deploy": "wrangler deploy",
+		"deploy:dev": "wrangler deploy --env development",
+		"deploy:prod": "wrangler deploy --env production",
+		"type-check": "tsc --noEmit",
+		"db:create": "wrangler d1 create raidhack-db",
+		"db:schema": "wrangler d1 execute raidhack-db --file=./database/schema.sql",
+		"db:seed": "wrangler d1 execute raidhack-db --file=./database/seed.sql",
+		"db:query": "wrangler d1 execute raidhack-db",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
 	},
 	"dependencies": {
 		"hono": "^4.8.12"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.0.0",
+		"@types/node": "^20.0.0",
+		"typescript": "^5.0.0",
 		"wrangler": "^4.27.0"
 	}
 }
