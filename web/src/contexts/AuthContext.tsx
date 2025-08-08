@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // ローカルストレージからトークンとユーザー情報を復元
-    const savedToken = localStorage.getItem('token')
+    const savedToken = localStorage.getItem('authToken')
     const savedUser = localStorage.getItem('user')
 
     if (savedToken && savedUser) {
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.success && data.user && data.token) {
         setUser(data.user)
         setToken(data.token)
-        localStorage.setItem('token', data.token)
+        localStorage.setItem('authToken', data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
         return true
       }
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.success && data.user && data.token) {
         setUser(data.user)
         setToken(data.token)
-        localStorage.setItem('token', data.token)
+        localStorage.setItem('authToken', data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
         return true
       }
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null)
     setToken(null)
-    localStorage.removeItem('token')
+    localStorage.removeItem('authToken')
     localStorage.removeItem('user')
   }
 
