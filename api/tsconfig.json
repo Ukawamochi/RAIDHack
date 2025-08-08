@@ -1,27 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
+    "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "bundler",
-    "types": ["@cloudflare/workers-types", "./worker-configuration.d.ts"],
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
+    "moduleResolution": "Bundler",
     "strict": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "noEmit": true,
-    "isolatedModules": true,
-    "allowImportingTsExtensions": true,
+    "lib": [
+      "ESNext"
+    ],
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
+    "jsxImportSource": "hono/jsx",
+    "types": [
+        "./worker-configuration.d.ts"
+    ]
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
 }
