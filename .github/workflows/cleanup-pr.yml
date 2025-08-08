@@ -52,7 +52,7 @@ jobs:
           if npx wrangler@latest whoami > /dev/null 2>&1; then
             echo "Wrangler authentication successful"
             echo "Deleting worker idempotently (will succeed even if absent)..."
-            delete_output=$(npx wrangler@latest delete "$WORKER_NAME" --force 2>&1 || true)
+            delete_output=$(npx wrangler@latest delete --name "$WORKER_NAME" --force 2>&1 || true)
             echo "$delete_output"
             if echo "$delete_output" | grep -qiE 'deleted|success'; then
               echo "Worker deletion confirmed"
@@ -135,7 +135,7 @@ jobs:
             echo "⚠️ WARNING: Worker may still be reachable ($STATUS)"
           fi
 
-          cd ../web
+          cd web
           echo "Checking Pages deployments..."
           REMAINING=$(npx wrangler@latest pages deployment list --project-name "raidhack-web" --format json 2>/dev/null | \
             jq -r --arg branch "pr-$PR_NUMBER" '.[] | select(.deployment_trigger.metadata.branch == $branch) | .id' 2>/dev/null | wc -l || echo "0")
