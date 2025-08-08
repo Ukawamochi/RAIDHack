@@ -1,0 +1,311 @@
+name: Deploy RAIDHack – Pull Request
+
+on:
+  pull_request:
+    branches: [ master ]
+    types: [ opened, synchronize, reopened, closed ]
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Run deploy or cleanup'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - cleanup
+      pr_number:
+        description: 'PR number (required for manual runs)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  deploy-api:
+    if: (github.event_name == 'pull_request' && github.event.action != 'closed') || (github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'deploy')
+    runs-on: ubuntu-latest
+    name: Deploy Workers API (PR)
+    outputs:
+      api-url: ${{ steps.deploy-api.outputs.api-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: api/package-lock.json
+
+      - name: Install API dependencies
+        run: |
+          cd api
+          npm ci
+
+      - name: Deploy Workers API
+        id: deploy-api
+        run: |
+          cd api
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+            if [ -z "$PR_NUMBER" ]; then
+              echo "pr_number is required for manual deploy"
+              exit 1
+            fi
+          fi
+
+          WORKER_NAME="raidhack-api-pr-$PR_NUMBER"
+          API_URL="https://${WORKER_NAME}.ukawamochi5.workers.dev"
+
+          echo "Deploying to: $API_URL"
+          npx wrangler deploy --minify --name "$WORKER_NAME"
+          echo "api-url=$API_URL" >> $GITHUB_OUTPUT
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  deploy-web:
+    if: (github.event_name == 'pull_request' && github.event.action != 'closed') || (github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'deploy')
+    runs-on: ubuntu-latest
+    name: Deploy Pages (PR)
+    needs: deploy-api
+    outputs:
+      pages-url: ${{ steps.deploy-pages.outputs.pages-url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install Web dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Build React app
+        run: |
+          cd web
+          npm run build
+        env:
+          VITE_API_BASE: ${{ needs.deploy-api.outputs.api-url }}
+
+      - name: Deploy to Cloudflare Pages (PR branch)
+        id: deploy-pages
+        run: |
+          cd web
+          PROJECT_NAME="raidhack-web"
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+            if [ -z "$PR_NUMBER" ]; then
+              echo "pr_number is required for manual deploy"
+              exit 1
+            fi
+          fi
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "Manual run without pr_number; skipping PR deploy"
+            exit 0
+          fi
+
+          BRANCH_NAME="pr-$PR_NUMBER"
+          echo "Deploying PR to branch: $BRANCH_NAME"
+          output=$(npx wrangler@latest pages deploy dist --project-name "$PROJECT_NAME" --branch "$BRANCH_NAME" 2>&1)
+          PAGES_URL="https://${BRANCH_NAME}.raidhack-web.pages.dev"
+
+          echo "$output"
+          actual_url=$(echo "$output" | grep -oE 'https://[a-zA-Z0-9\-\.]+\.pages\.dev' | head -1)
+          if [ -n "$actual_url" ]; then
+            PAGES_URL="$actual_url"
+          fi
+
+          echo "pages-url=$PAGES_URL" >> $GITHUB_OUTPUT
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Comment PR with deployment info
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pagesUrl = '${{ steps.deploy-pages.outputs.pages-url }}';
+            const apiUrl = '${{ needs.deploy-api.outputs.api-url }}';
+            const prNumber = ${{ github.event.number }};
+            const comment = `## 🚀 PR環境デプロイ完了\n\nこのPR (#${prNumber}) の変更が専用環境にデプロイされました：\n\n- **Webアプリ**: ${pagesUrl}\n- **API**: ${apiUrl}\n\n各PRごとに独立した環境で動作します。デプロイメントを確認してください。\n\n> **Note**: この環境はPRがクローズされると自動的に削除されます。`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  cleanup:
+    if: (github.event_name == 'pull_request' && github.event.action == 'closed') || (github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'cleanup')
+    runs-on: ubuntu-latest
+    name: Cleanup PR Environment
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Install dependencies
+        run: |
+          cd api
+          npm ci
+
+      - name: Delete Workers API
+        run: |
+          cd api
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+            if [ -z "$PR_NUMBER" ]; then
+              echo "pr_number is required for manual cleanup"
+              exit 1
+            fi
+          fi
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "Manual run without pr_number; skipping cleanup"
+            exit 0
+          fi
+
+          WORKER_NAME="raidhack-api-pr-$PR_NUMBER"
+          echo "Attempting to delete Worker: $WORKER_NAME"
+
+          if npx wrangler whoami > /dev/null 2>&1; then
+            echo "Wrangler authentication successful"
+            if npx wrangler list | grep -q "$WORKER_NAME"; then
+              echo "Worker $WORKER_NAME found, deleting..."
+              npx wrangler delete "$WORKER_NAME" --force
+              echo "Worker $WORKER_NAME deleted successfully"
+            else
+              echo "Worker $WORKER_NAME not found, already deleted or never existed"
+            fi
+          else
+            echo "Wrangler authentication failed"
+            exit 1
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Install web dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Delete Cloudflare Pages deployments
+        run: |
+          cd web
+          PROJECT_NAME="raidhack-web"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+            if [ -z "$PR_NUMBER" ]; then
+              echo "pr_number is required for manual cleanup"
+              exit 1
+            fi
+          fi
+          BRANCH_NAME="pr-${PR_NUMBER}"
+          echo "Attempting to cleanup Pages deployments for branch: $BRANCH_NAME"
+          if npx wrangler@latest whoami > /dev/null 2>&1; then
+            echo "Wrangler authentication successful for Pages"
+            if npx wrangler@latest pages project list | grep -q "$PROJECT_NAME"; then
+              echo "Pages project $PROJECT_NAME found"
+              echo "Getting deployment IDs for branch: $BRANCH_NAME"
+              DEPLOYMENT_IDS=$(npx wrangler@latest pages deployment list --project-name "$PROJECT_NAME" --format json 2>/dev/null | \
+                jq -r --arg branch "$BRANCH_NAME" '.[] | select(.deployment_trigger.metadata.branch == $branch) | .id' 2>/dev/null || echo "")
+              if [ -n "$DEPLOYMENT_IDS" ]; then
+                echo "Found deployment IDs for branch $BRANCH_NAME:"
+                echo "$DEPLOYMENT_IDS"
+                echo "$DEPLOYMENT_IDS" | while read -r deployment_id; do
+                  if [ -n "$deployment_id" ]; then
+                    echo "Deleting deployment: $deployment_id"
+                    npx wrangler@latest pages deployment delete "$deployment_id" --project-name "$PROJECT_NAME" --force || echo "Failed to delete deployment $deployment_id"
+                  fi
+                done
+                echo "All deployments for branch $BRANCH_NAME processed"
+              else
+                echo "No deployments found for branch $BRANCH_NAME (already cleaned up or never existed)"
+              fi
+            else
+              echo "Pages project $PROJECT_NAME not found"
+            fi
+          else
+            echo "Wrangler authentication failed for Pages"
+            exit 1
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Verify cleanup completion
+        run: |
+          echo "=== Cleanup Verification ==="
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          fi
+          echo "PR Number: $PR_NUMBER"
+          echo "Expected Worker Name: raidhack-api-pr-$PR_NUMBER"
+          echo "Expected Pages Branch: pr-$PR_NUMBER"
+
+          cd api
+          echo "Checking if Worker still exists..."
+          if npx wrangler list | grep -q "raidhack-api-pr-$PR_NUMBER"; then
+            echo "⚠️ WARNING: Worker still exists"
+          else
+            echo "✅ Worker successfully deleted"
+          fi
+
+          cd ../web
+          echo "Checking Pages deployments..."
+          REMAINING=$(npx wrangler@latest pages deployment list --project-name "raidhack-web" --format json 2>/dev/null | \
+            jq -r --arg branch "pr-$PR_NUMBER" '.[] | select(.deployment_trigger.metadata.branch == $branch) | .id' 2>/dev/null | wc -l || echo "0")
+
+          if [ "$REMAINING" -gt 0 ]; then
+            echo "⚠️ WARNING: $REMAINING Pages deployments still exist for this PR"
+          else
+            echo "✅ All Pages deployments successfully deleted"
+          fi
+          echo "=== Cleanup Verification Complete ==="
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Comment PR cleanup
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ github.event.number }};
+            const comment = `## 🧹 PR環境クリーンアップ実行完了\n\nこのPR (#${prNumber}) の専用環境のクリーンアップが実行されました：\n\n- **Worker API**: \`raidhack-api-pr-${prNumber}\`\n- **Pages Branch**: \`pr-${prNumber}\`\n\nクリーンアップの詳細は[Actions実行ログ](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})で確認できます。\n\n> **Note**: リソースの削除には数分かかる場合があります。完全に削除されない場合は手動での確認をお願いします。`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
