@@ -15,7 +15,7 @@ function ApiTester() {
     setIsLoading(true)
     setResult({ success: false, message: 'APIに接続中...' })
 
-    const apiBase = import.meta.env.API_BASE || 'https://raidhack-api.workers.dev'
+    const apiBase = import.meta.env.VITE_API_BASE || 'https://raidhack-api.workers.dev'
     const endpoint = `${apiBase}/message`
 
     try {
