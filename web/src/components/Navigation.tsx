@@ -24,6 +24,9 @@ function Navigation() {
           <Link to="/settings" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
             設定
           </Link>
+          <Link to="/admin" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
+            管理
+          </Link>
         </>
       )}
       <Link to="/test-api" style={{ textDecoration: 'none', color: '#007bff' }}>

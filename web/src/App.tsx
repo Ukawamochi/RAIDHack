@@ -8,6 +8,8 @@ import NewPostPage from './pages/NewPostPage'
 import SettingsPage from './pages/SettingsPage'
 import UserPage from './pages/UserPage'
 import ProjectPage from './pages/ProjectPage'
+import IdeaDetailPage from './pages/IdeaDetailPage'
+import AdminPage from './pages/AdminPage'
 
 import { AuthProvider } from './features/auth'
 import Navigation from './components/Navigation'
@@ -28,6 +30,8 @@ function App() {
 
             <Route path="/new" element={<NewPostPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/ideas/:id" element={<IdeaDetailPage />} />
+            <Route path="/admin" element={<AdminPage />} />
             <Route path="/user/:username" element={<UserPage />} />
             <Route path="/user/:username/:project" element={<ProjectPage />} />
             <Route path="*" element={<NotFoundPage />} />

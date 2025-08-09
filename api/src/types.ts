@@ -83,6 +83,9 @@ export interface Idea {
   required_skills: string[];
   user_id: number;
   status: 'open' | 'development' | 'completed';
+  start_date?: string; // レイド開始日
+  deadline?: string; // 期限
+  progress_percentage: number; // 進捗率(0-100)
   created_at: string;
   updated_at: string;
   // Extended properties for responses
@@ -114,6 +117,31 @@ export interface IdeaResponse {
   success: true;
   message?: string;
   idea: Idea;
+}
+
+export interface UpdateIdeaStatusRequest {
+  status: 'open' | 'development' | 'completed';
+  start_date?: string; // development状態になる時に設定
+}
+
+export interface UpdateIdeaDeadlineRequest {
+  deadline: string;
+}
+
+export interface UpdateIdeaProgressRequest {
+  progress_percentage: number;
+}
+
+// ====================
+// Project Activity Types
+// ====================
+export interface ProjectActivity {
+  id: number;
+  project_id: number;
+  activity_type: 'status_change' | 'deadline_set' | 'progress_update' | 'member_join' | 'member_leave';
+  description: string;
+  created_at: string;
+  created_by: number;
 }
 
 // ====================
