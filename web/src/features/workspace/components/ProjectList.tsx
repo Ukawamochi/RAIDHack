@@ -1,10 +1,14 @@
 import { useAuth } from '../../auth'
+import { useNavigate, useLocation } from 'react-router-dom'
 import ProjectItem from './ProjectItem'
 
 const ProjectList = () => {
   const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
 
-  if (!isAuthenticated) {
+  // /newページでは非表示
+  if (!isAuthenticated || location.pathname === '/new') {
     return null
   }
 
@@ -188,7 +192,7 @@ const ProjectList = () => {
       {/* 投稿ボタン */}
       <div className="p-4 border-t border-gray-200">
         <button 
-          onClick={() => console.log('投稿ボタンがクリックされました')}
+          onClick={() => navigate('/new')}
           className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors duration-200 flex items-center justify-center"
         >
           <span className="text-2xl mr-2">+</span>

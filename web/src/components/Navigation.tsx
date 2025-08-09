@@ -26,6 +26,16 @@ function Navigation() {
     {
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+      path: '/notifications',
+      label: '通知'
+    },
+    {
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
@@ -46,7 +56,7 @@ function Navigation() {
   ]
 
   return (
-    <div className="fixed left-0 top-0 h-full w-20 flex flex-col justify-between items-center py-6 z-50 border-r border-gray-600" style={{ minHeight: '100vh', backgroundColor: '#3c4252' }}>
+    <div className="fixed left-0 top-0 h-full w-20 flex flex-col justify-between items-center py-6 z-50 border-r border-gray-600" style={{ minHeight: '100vh', backgroundColor: '#363A51' }}>
       <div className="flex flex-col items-center space-y-6">
         {sidebarItems.filter((item) => {
           // ログインしていない場合、プロフィールとプロジェクトを非表示

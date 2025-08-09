@@ -24,7 +24,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [jwtToken, setJwtToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const isAuthenticated = user !== null && jwtToken !== null
+  const isAuthenticated = true // 一時的に常にログイン状態にする
 
   useEffect(() => {
     // Check for stored JWT token and user data on mount
