@@ -78,28 +78,15 @@ export default function GitHubAuth() {
   }
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="flex flex-col items-center space-y-1">
       <div 
         className="w-8 h-8 text-gray-300 hover:text-white transition-colors duration-200 flex items-center justify-center cursor-pointer"
         title="Sign in with GitHub"
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        onClick={login}
       >
         <GitHubIcon />
       </div>
-      
-      {isMenuOpen && (
-        <div className="absolute bottom-0 left-full ml-2 bg-slate-800 border border-slate-600 rounded-md shadow-lg min-w-32 z-10">
-          <button
-            onClick={() => {
-              login()
-              setIsMenuOpen(false)
-            }}
-            className="w-full px-3 py-2 text-left text-blue-400 hover:text-blue-300 hover:bg-slate-700 transition-colors duration-200 text-sm"
-          >
-            ログイン
-          </button>
-        </div>
-      )}
+      <span className="text-xs text-gray-300">Login</span>
     </div>
   )
 }

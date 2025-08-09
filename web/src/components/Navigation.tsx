@@ -3,7 +3,7 @@ import { GitHubAuth, useAuth } from '../features/auth'
 
 function Navigation() {
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, isAuthenticated } = useAuth()
 
   const sidebarItems = [
     {
@@ -48,7 +48,13 @@ function Navigation() {
   return (
     <div className="fixed left-0 top-0 h-full w-20 flex flex-col justify-between items-center py-6 z-50 border-r border-gray-600" style={{ minHeight: '100vh', backgroundColor: '#3c4252' }}>
       <div className="flex flex-col items-center space-y-6">
-        {sidebarItems.map((item, index) => {
+        {sidebarItems.filter((item) => {
+          // ログインしていない場合、プロフィールとプロジェクトを非表示
+          if (!isAuthenticated && (item.label === 'プロフィール' || item.label === 'プロジェクト')) {
+            return false
+          }
+          return true
+        }).map((item, index) => {
           if (item.path === null) {
             // プロジェクトアイコンの場合、/:USER/:PROJECTパスでアクティブ判定
             const isProjectActive = item.label === 'プロジェクト' && 
