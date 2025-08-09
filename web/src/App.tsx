@@ -4,6 +4,7 @@ import IndexPage from './pages/IndexPage'
 import TestApiPage from './pages/TestApiPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
+import NewPostPage from './pages/NewPostPage'
 
 import './App.css'
 
@@ -15,11 +16,14 @@ function App() {
           <Link to="/" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
             Home
           </Link>
-          <Link to="/test-api" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
-            Test API
-          </Link>
-          <Link to="/login" style={{ textDecoration: 'none', color: '#007bff' }}>
+          <Link to="/login" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
             Login
+          </Link>
+          <Link to="/new" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
+            投稿
+          </Link>
+          <Link to="/test-api" style={{ textDecoration: 'none', color: '#007bff' }}>
+            Test API
           </Link>
         </nav>
 
@@ -27,6 +31,7 @@ function App() {
           <Route path="/" element={<IndexPage />} />
           <Route path="/test-api" element={<TestApiPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/new" element={<NewPostPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
