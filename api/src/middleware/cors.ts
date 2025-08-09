@@ -5,7 +5,8 @@ export const corsMiddleware = cors({
   origin: [
     'http://localhost:3000',          // ローカル開発（React）
     'http://localhost:5173',          // ローカル開発（Vite）
-    'https://raidhack-web.pages.dev'  // 本番環境
+    'https://raidhack-web.pages.dev',  // 本番環境
+    'https://*.raidhack-web.pages.dev' // PR環境とその他のサブドメイン
   ],
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
