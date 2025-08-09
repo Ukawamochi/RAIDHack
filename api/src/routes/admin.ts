@@ -27,7 +27,7 @@ admin.get('/stats', authMiddleware, requireAdmin, async (c) => {
     const userCount = await db.prepare('SELECT COUNT(*) as count FROM users').first();
     const ideaCount = await db.prepare('SELECT COUNT(*) as count FROM ideas').first();
     const teamCount = await db.prepare('SELECT COUNT(*) as count FROM teams').first();
-    const workCount = await db.prepare('SELECT COUNT(*) as count FROM works WHERE status = "submitted"').first();
+    const workCount = await db.prepare('SELECT COUNT(*) as count FROM works').first();
     const applicationCount = await db.prepare('SELECT COUNT(*) as count FROM applications').first();
     const voteCount = await db.prepare('SELECT COUNT(*) as count FROM votes').first();
     
@@ -53,7 +53,7 @@ admin.get('/stats', authMiddleware, requireAdmin, async (c) => {
       SELECT w.*, t.name as team_name 
       FROM works w 
       JOIN teams t ON w.team_id = t.id 
-      ORDER BY w.submitted_at DESC 
+      ORDER BY w.created_at DESC 
       LIMIT 5
     `).all();
     
@@ -290,8 +290,8 @@ admin.post('/notifications/system', authMiddleware, requireAdmin, async (c) => {
     
     // 通知を一括作成
     const stmt = db.prepare(`
-      INSERT INTO notifications (user_id, type, title, message, created_at)
-      VALUES (?, 'system', ?, ?, CURRENT_TIMESTAMP)
+      INSERT INTO notifications (user_id, type, title, message, is_read, created_at)
+      VALUES (?, 'system', ?, ?, 0, CURRENT_TIMESTAMP)
     `);
     
     for (const userId of userIds) {

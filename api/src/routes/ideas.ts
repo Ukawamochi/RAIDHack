@@ -356,7 +356,7 @@ ideaRoutes.post('/:id/apply', authMiddleware, async (c) => {
 
     // 既に応募済みかチェック
     const existingApplication = await c.env.DB.prepare(
-      "SELECT id FROM applications WHERE idea_id = ? AND user_id = ?"
+      "SELECT id FROM applications WHERE idea_id = ? AND applicant_id = ?"
     ).bind(ideaId, userId).first();
 
     if (existingApplication) {
@@ -370,9 +370,9 @@ ideaRoutes.post('/:id/apply', authMiddleware, async (c) => {
 
     // 応募を作成
     const applicationResult = await c.env.DB.prepare(`
-      INSERT INTO applications (idea_id, user_id, message, status, created_at)
-      VALUES (?, ?, ?, 'pending', CURRENT_TIMESTAMP)
-    `).bind(ideaId, userId, message || '').run();
+      INSERT INTO applications (idea_id, applicant_id, message, motivation, status, applied_at)
+      VALUES (?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
+    `).bind(ideaId, userId, message || '', motivation || '').run();
 
     return c.json({
       success: true,
@@ -436,12 +436,12 @@ ideaRoutes.get('/:id/applications', authMiddleware, async (c) => {
     // 応募一覧を取得
     const applications = await c.env.DB.prepare(`
       SELECT 
-        a.id, a.message, a.status, a.created_at,
+        a.id, a.message, a.status, a.applied_at,
         u.id as user_id, u.username, u.email, u.bio, u.skills, u.avatar_url
       FROM applications a
-      JOIN users u ON a.user_id = u.id
+      JOIN users u ON a.applicant_id = u.id
       WHERE a.idea_id = ?
-      ORDER BY a.created_at DESC
+      ORDER BY a.applied_at DESC
     `).bind(ideaId).all();
 
     return c.json({
@@ -450,7 +450,7 @@ ideaRoutes.get('/:id/applications', authMiddleware, async (c) => {
         id: app.id,
         message: app.message,
         status: app.status,
-        created_at: app.created_at,
+        created_at: app.applied_at,
         applicant: {
           id: app.user_id,
           username: app.username,
@@ -549,9 +549,9 @@ ideaRoutes.put('/:id/applications/:applicationId', authMiddleware, async (c) => 
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     await c.env.DB.prepare(`
       UPDATE applications 
-      SET status = ?
+      SET status = ?, reviewed_at = CURRENT_TIMESTAMP, review_message = ?
       WHERE id = ?
-    `).bind(newStatus, applicationId).run();
+    `).bind(newStatus, message || '', applicationId).run();
 
     return c.json({
       success: true,

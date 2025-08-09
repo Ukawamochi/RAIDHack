@@ -11,7 +11,7 @@ teamRoutes.get('/me', authMiddleware, async (c) => {
 
     const teams = await c.env.DB.prepare(`
       SELECT 
-        t.id, t.idea_id, t.discord_url, t.status, t.created_at,
+        t.id, t.idea_id, t.discord_invite_url, t.status, t.created_at,
         i.title as idea_title, i.description as idea_description
       FROM teams t
       JOIN team_members tm ON t.id = tm.team_id
@@ -28,7 +28,7 @@ teamRoutes.get('/me', authMiddleware, async (c) => {
         name: `${team.idea_title} チーム`,
         description: team.idea_description,
         status: team.status,
-        discord_url: team.discord_url,
+        discord_url: team.discord_invite_url,
         created_at: team.created_at,
         idea: {
           id: team.idea_id,
@@ -204,7 +204,7 @@ teamRoutes.put('/:id/discord', authMiddleware, async (c) => {
     // Discord招待URLを更新
     await c.env.DB.prepare(`
       UPDATE teams 
-      SET discord_url = ?
+      SET discord_invite_url = ?
       WHERE id = ?
     `).bind(discord_url, teamId).run();
 
