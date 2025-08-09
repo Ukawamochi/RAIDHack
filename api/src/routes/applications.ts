@@ -11,14 +11,14 @@ applicationRoutes.get('/me', authMiddleware, async (c) => {
 
     const applications = await c.env.DB.prepare(`
       SELECT 
-        a.id, a.message, a.status, a.created_at,
+        a.id, a.message, a.status, a.applied_at,
         i.id as idea_id, i.title as idea_title, i.description as idea_description,
         u.username as idea_author
       FROM applications a
       JOIN ideas i ON a.idea_id = i.id
       JOIN users u ON i.user_id = u.id
-      WHERE a.user_id = ?
-      ORDER BY a.created_at DESC
+      WHERE a.applicant_id = ?
+      ORDER BY a.applied_at DESC
     `).bind(userId).all();
 
     return c.json({
@@ -28,7 +28,7 @@ applicationRoutes.get('/me', authMiddleware, async (c) => {
         idea_id: app.idea_id,
         message: app.message,
         status: app.status,
-        applied_at: app.created_at,
+        applied_at: app.applied_at,
         idea: {
           title: app.idea_title,
           description: app.idea_description,
@@ -66,11 +66,11 @@ applicationRoutes.post('/:id/create-team', authMiddleware, async (c) => {
     // 応募とアイデア情報を取得
     const applicationData = await c.env.DB.prepare(`
       SELECT 
-        a.id, a.status, a.idea_id, a.user_id,
+        a.id, a.status, a.idea_id, a.applicant_id,
         i.title, i.user_id as idea_owner_id, i.status as idea_status
       FROM applications a
       JOIN ideas i ON a.idea_id = i.id
-      WHERE a.id = ? AND (a.user_id = ? OR i.user_id = ?)
+      WHERE a.id = ? AND (a.applicant_id = ? OR i.user_id = ?)
     `).bind(applicationId, userId, userId).first();
 
     if (!applicationData) {
@@ -107,9 +107,9 @@ applicationRoutes.post('/:id/create-team', authMiddleware, async (c) => {
 
     // チーム作成
     const teamResult = await c.env.DB.prepare(`
-      INSERT INTO teams (idea_id, status, created_at)
-      VALUES (?, 'active', CURRENT_TIMESTAMP)
-    `).bind(applicationData.idea_id).run();
+      INSERT INTO teams (idea_id, name, description, status, created_at)
+      VALUES (?, ?, ?, 'active', CURRENT_TIMESTAMP)
+    `).bind(applicationData.idea_id, `${applicationData.title} チーム`, `${applicationData.title}の開発チーム`).run();
 
     const teamId = teamResult.meta.last_row_id;
 
@@ -117,7 +117,7 @@ applicationRoutes.post('/:id/create-team', authMiddleware, async (c) => {
     await c.env.DB.prepare(`
       INSERT INTO team_members (team_id, user_id, role, joined_at)
       VALUES (?, ?, 'leader', CURRENT_TIMESTAMP), (?, ?, 'member', CURRENT_TIMESTAMP)
-    `).bind(teamId, applicationData.idea_owner_id, teamId, applicationData.user_id).run();
+    `).bind(teamId, applicationData.idea_owner_id, teamId, applicationData.applicant_id).run();
 
     // アイデアのステータスを'development'に変更
     await c.env.DB.prepare(
@@ -126,10 +126,10 @@ applicationRoutes.post('/:id/create-team', authMiddleware, async (c) => {
 
     // 承認通知を応募者に送信
     await c.env.DB.prepare(`
-      INSERT INTO notifications (user_id, type, title, message, data, created_at)
-      VALUES (?, 'application_status', ?, ?, ?, CURRENT_TIMESTAMP)
+      INSERT INTO notifications (user_id, type, title, message, data, is_read, created_at)
+      VALUES (?, 'application_status', ?, ?, ?, 0, CURRENT_TIMESTAMP)
     `).bind(
-      applicationData.user_id,
+      applicationData.applicant_id,
       '応募が承認されました',
       `あなたの「${applicationData.title}」への応募が承認され、チームが作成されました。`,
       JSON.stringify({ ideaId: applicationData.idea_id, teamId })
