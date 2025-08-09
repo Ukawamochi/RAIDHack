@@ -53,11 +53,11 @@ workRoutes.get('/', optionalAuthMiddleware, async (c) => {
       // チームメンバーを取得
       const teamMembers = await c.env.DB.prepare(`
         SELECT u.id, u.username, u.avatar_url
-        FROM work_team_members wtm
-        JOIN users u ON wtm.user_id = u.id
-        WHERE wtm.work_id = ?
-        ORDER BY wtm.created_at ASC
-      `).bind(work.id).all();
+        FROM team_members tm
+        JOIN users u ON tm.user_id = u.id
+        WHERE tm.team_id = ?
+        ORDER BY tm.joined_at ASC
+      `).bind(work.team_id).all();
 
       workList.push({
         id: work.id as number,
@@ -153,11 +153,11 @@ workRoutes.get('/:id', optionalAuthMiddleware, async (c) => {
     // チームメンバーを取得
     const teamMembers = await c.env.DB.prepare(`
       SELECT u.id, u.username, u.email, u.bio, u.skills, u.avatar_url
-      FROM work_team_members wtm
-      JOIN users u ON wtm.user_id = u.id
-      WHERE wtm.work_id = ?
-      ORDER BY wtm.created_at ASC
-    `).bind(workId).all();
+      FROM team_members tm
+      JOIN users u ON tm.user_id = u.id
+      WHERE tm.team_id = ?
+      ORDER BY tm.joined_at ASC
+    `).bind(workData.team_id).all();
 
     const work: Work = {
       id: workData.id as number,
@@ -204,8 +204,23 @@ workRoutes.get('/:id', optionalAuthMiddleware, async (c) => {
 // 作品投稿（認証必須）
 workRoutes.post('/', authMiddleware, async (c) => {
   try {
-    const body = await c.req.json() as CreateWorkRequest;
-    const { title, description, technologies, demo_url, repository_url, team_id, teamMemberIds } = body;
+    const body = await c.req.json();
+    const { 
+      title, 
+      description, 
+      technologies, 
+      demo_url, 
+      repository_url, 
+      liveUrl,      // Web側からの代替フィールド名
+      githubUrl,    // Web側からの代替フィールド名
+      team_id, 
+      teamMemberIds 
+    } = body;
+    
+    // フィールド名のマッピング（Web側との互換性のため）
+    const finalDemoUrl = demo_url || liveUrl;
+    const finalRepositoryUrl = repository_url || githubUrl;
+    
     const user = c.get('user') as User;
 
     // バリデーション
@@ -233,7 +248,7 @@ workRoutes.post('/', authMiddleware, async (c) => {
     const result = await c.env.DB.prepare(
       `INSERT INTO works (title, description, technologies, demo_url, repository_url, team_id, status) 
        VALUES (?, ?, ?, ?, ?, ?, 'draft') RETURNING id, created_at, updated_at`
-    ).bind(title, description, technologiesJson, demo_url || null, repository_url || null, team_id).first();
+    ).bind(title, description, technologiesJson, finalDemoUrl || null, finalRepositoryUrl || null, team_id).first();
 
     if (!result) {
       const errorResponse: ErrorResponse = {
@@ -246,41 +261,25 @@ workRoutes.post('/', authMiddleware, async (c) => {
 
     const workId = result.id as number;
 
-    // チームメンバーを追加（作成者を含む）
-    const allMemberIds = [user.id, ...(teamMemberIds || [])];
-    const uniqueMemberIds = [...new Set(allMemberIds)];
-
-    for (const memberId of uniqueMemberIds) {
-      await c.env.DB.prepare(
-        "INSERT INTO work_team_members (work_id, user_id) VALUES (?, ?)"
-      ).bind(workId, memberId).run();
-    }
-
-    // チームメンバー情報を取得
+    // チームメンバー情報を取得（team_idから）
     const teamMembers = await c.env.DB.prepare(`
       SELECT u.id, u.username, u.avatar_url
-      FROM work_team_members wtm
-      JOIN users u ON wtm.user_id = u.id
-      WHERE wtm.work_id = ?
-    `).bind(workId).all();
+      FROM team_members tm
+      JOIN users u ON tm.user_id = u.id
+      WHERE tm.team_id = ?
+    `).bind(team_id).all();
 
     const work: Work = {
       id: workId,
       title,
       description,
       technologies: technologies || [],
-      demo_url,
-      repository_url,
-      created_at: result.created_at as string,
-      updated_at: result.updated_at as string,
+      demo_url: finalDemoUrl,
+      repository_url: finalRepositoryUrl,
       team_id,
-      teamMembers: teamMembers.results.map((member: any) => ({
-        id: member.id as number,
-        username: member.username as string,
-        avatar_url: member.avatar_url as string || undefined
-      })),
-      vote_count: 0,
-      user_voted: false
+      status: 'draft',
+      created_at: result.created_at as string,
+      updated_at: result.updated_at as string
     };
 
     const response: WorkResponse = {
