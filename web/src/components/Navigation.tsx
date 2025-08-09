@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { GitHubAuth, useAuth } from '../features/auth'
+import reactLogo from '../assets/react.svg'
 
 function Navigation() {
   const location = useLocation()
@@ -8,7 +9,7 @@ function Navigation() {
   const sidebarItems = [
     {
       icon: (
-        <img src="/src/assets/react.svg" alt="React" width="20" height="20" />
+        <img src={reactLogo} alt="React" width="20" height="20" />
       ),
       path: null,
       label: 'React'
