@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import NewPostPage from './pages/NewPostPage'
 import SettingsPage from './pages/SettingsPage'
+import UserPage from './pages/UserPage'
+import ProjectPage from './pages/ProjectPage'
 
 import './App.css'
 
@@ -37,6 +39,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/new" element={<NewPostPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/user/:username" element={<UserPage />} />
+          <Route path="/user/:username/:project" element={<ProjectPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
