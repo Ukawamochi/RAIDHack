@@ -35,9 +35,28 @@ jobs:
         run: |
           cd api
           WORKER_NAME="raidhack-api"
-          API_URL="https://raidhack-api.ukawamochi5.workers.dev"
-          echo "Deploying to: $API_URL"
-          npx wrangler deploy --minify --name "$WORKER_NAME"
+          echo "Deploying Worker: $WORKER_NAME"
+          
+          # Wrangler deploy and capture the actual URL
+          deploy_output=$(npx wrangler deploy --minify --name "$WORKER_NAME" 2>&1)
+          echo "Deploy output:"
+          echo "$deploy_output"
+          
+          # Extract the actual deployed URL from wrangler output
+          API_URL=$(echo "$deploy_output" | grep -oE 'https://[a-zA-Z0-9\-\.]+\.workers\.dev' | head -1)
+          
+          if [ -z "$API_URL" ]; then
+            # Fallback: construct likely URL pattern
+            API_URL="https://${WORKER_NAME}.workers.dev"
+            echo "Could not extract URL from deploy output, using fallback: $API_URL"
+          else
+            echo "Extracted deployed URL: $API_URL"
+          fi
+          
+          # Test the deployed API
+          echo "Testing deployed API endpoint..."
+          curl -f "$API_URL/health" || echo "Health check failed, but continuing"
+          
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

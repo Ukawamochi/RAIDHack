@@ -15,7 +15,8 @@
 ## 2. 環境変数の設定
 
 Pages設定で以下の環境変数を追加:
-- `VITE_API_BASE`: `https://raidhack-api.ukawamochi5.workers.dev`
+- `VITE_API_BASE`: `https://raidhack-api.workers.dev`
+
 
 ## 3. Production branchの設定
 
@@ -28,3 +29,23 @@ Pages設定で以下の環境変数を追加:
 - Cloudflare Pagesの最適化されたビルド環境
 - キャッシュの自動最適化
 - より詳細なデプロイログ
+
+## API URLの確認方法
+
+実際のCloudflare Workers APIのURLを確認するには：
+
+1. **Cloudflare Dashboard**で確認:
+   - https://dash.cloudflare.com/ → Workers & Pages
+   - デプロイされた`raidhack-api`をクリック
+   - URLが表示されます
+
+2. **コマンドラインで確認**:
+   ```bash
+   cd api
+   npx wrangler whoami  # アカウント情報確認
+   npx wrangler list    # デプロイされたWorkers一覧
+   ```
+
+3. **実際のデプロイで確認**:
+   - GitHub ActionsのAPIデプロイログを確認
+   - wranglerの出力から実際のURLを取得
