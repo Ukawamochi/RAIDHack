@@ -4,6 +4,66 @@ import { authMiddleware } from "../middleware/auth";
 
 export const teamRoutes = new Hono<AppContext>();
 
+// 全チーム一覧取得（パブリック）
+teamRoutes.get('/', async (c) => {
+  try {
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = Math.min(parseInt(c.req.query('limit') || '20'), 100);
+    const offset = (page - 1) * limit;
+
+    const teams = await c.env.DB.prepare(`
+      SELECT 
+        t.id, t.idea_id, t.status, t.created_at,
+        i.title as idea_title, i.description as idea_description,
+        COUNT(tm.user_id) as member_count
+      FROM teams t
+      JOIN ideas i ON t.idea_id = i.id
+      LEFT JOIN team_members tm ON t.id = tm.team_id
+      WHERE t.status = 'active'
+      GROUP BY t.id, t.idea_id, t.status, t.created_at, i.title, i.description
+      ORDER BY t.created_at DESC
+      LIMIT ? OFFSET ?
+    `).bind(limit, offset).all();
+
+    const totalCount = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM teams WHERE status = 'active'
+    `).first();
+
+    return c.json({
+      success: true,
+      teams: teams.results.map((team: any) => ({
+        id: team.id,
+        idea_id: team.idea_id,
+        name: `${team.idea_title} チーム`,
+        description: team.idea_description,
+        status: team.status,
+        member_count: team.member_count,
+        created_at: team.created_at,
+        idea: {
+          id: team.idea_id,
+          title: team.idea_title,
+          description: team.idea_description
+        }
+      })),
+      pagination: {
+        page,
+        limit,
+        total: (totalCount?.count as number) || 0,
+        total_pages: Math.ceil(((totalCount?.count as number) || 0) / limit)
+      }
+    });
+
+  } catch (error) {
+    console.error('Get teams error:', error);
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "チーム一覧の取得中にエラーが発生しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});
+
 // チーム一覧取得（自分が参加しているチーム）
 teamRoutes.get('/me', authMiddleware, async (c) => {
   try {
