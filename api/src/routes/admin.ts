@@ -43,9 +43,9 @@ admin.get('/stats', authMiddleware, requireAdmin, async (c) => {
     const recentApplications = await db.prepare(`
       SELECT a.*, u.username, i.title 
       FROM applications a 
-      JOIN users u ON a.applicant_id = u.id 
+      JOIN users u ON a.user_id = u.id 
       JOIN ideas i ON a.idea_id = i.id 
-      ORDER BY a.applied_at DESC 
+      ORDER BY a.created_at DESC 
       LIMIT 5
     `).all();
     
@@ -118,7 +118,7 @@ admin.get('/users', authMiddleware, requireAdmin, async (c) => {
         COUNT(DISTINCT tm.id) as team_count
       FROM users u
       LEFT JOIN ideas i ON u.id = i.user_id
-      LEFT JOIN applications a ON u.id = a.applicant_id
+      LEFT JOIN applications a ON u.id = a.user_id
       LEFT JOIN team_members tm ON u.id = tm.user_id
       GROUP BY u.id
       ORDER BY u.created_at DESC
