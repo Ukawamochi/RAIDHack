@@ -1,0 +1,1488 @@
+openapi: 3.1.0
+info:
+  title: RAIDHack API
+  description: |
+    RAIDHackは、開発者がアイデアを共有し、ハッカソンをするためのプラットフォームです。
+  version: 1.0.0
+  contact:
+    name: RAIDHack Platform
+    url: raidhack-web.pages.dev
+
+servers:
+  - url: https://raidhack-api.ukawamochi5.workers.dev
+    description: APIサーバー
+
+paths:
+  # ===== 認証関連 =====
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: ユーザー登録
+      description: 新しいユーザーアカウントを作成します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - username
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 30
+                  example: "developer_user"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "securePassword123"
+                bio:
+                  type: string
+                  maxLength: 500
+                  example: "フロントエンド開発者です"
+                skills:
+                  type: array
+                  items:
+                    type: string
+                  example: ["React", "TypeScript", "CSS"]
+      responses:
+        '201':
+          description: ユーザー登録成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      token:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: ユーザーが既に存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: ログイン
+      description: ユーザー認証を行い、JWTトークンを取得します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "securePassword123"
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      token:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/profile:
+    get:
+      tags:
+        - Authentication
+      summary: プロフィール取得
+      description: 認証済みユーザーのプロフィール情報を取得します
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: プロフィール取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Authentication
+      summary: プロフィール更新
+      description: 認証済みユーザーのプロフィール情報を更新します
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 30
+                bio:
+                  type: string
+                  maxLength: 500
+                skills:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: プロフィール更新成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===== アイデア関連 =====
+  /api/ideas:
+    get:
+      tags:
+        - Ideas
+      summary: アイデア一覧取得
+      description: 公開されているアイデアの一覧を取得します
+      parameters:
+        - name: page
+          in: query
+          description: ページ番号
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: 1ページあたりの件数
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: アイデア一覧取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      ideas:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Idea'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Ideas
+      summary: アイデア投稿
+      description: 新しいアイデアを投稿します
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+              properties:
+                title:
+                  type: string
+                  maxLength: 100
+                  example: "タスク管理アプリ"
+                description:
+                  type: string
+                  maxLength: 2000
+                  example: "チーム向けの効率的なタスク管理ツール"
+                required_skills:
+                  type: array
+                  items:
+                    type: string
+                  example: ["React", "Node.js", "MongoDB"]
+      responses:
+        '201':
+          description: アイデア投稿成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      idea:
+                        $ref: '#/components/schemas/Idea'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/ideas/{id}:
+    get:
+      tags:
+        - Ideas
+      summary: アイデア詳細取得
+      description: 指定されたIDのアイデア詳細を取得します
+      parameters:
+        - $ref: '#/components/parameters/IdeaId'
+      responses:
+        '200':
+          description: アイデア詳細取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      idea:
+                        $ref: '#/components/schemas/IdeaDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/ideas/{id}/like:
+    post:
+      tags:
+        - Ideas
+      summary: アイデアにいいね/いいね解除
+      description: 指定されたアイデアにいいねまたはいいね解除を行います
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdeaId'
+      responses:
+        '200':
+          description: いいね処理成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      liked:
+                        type: boolean
+                        description: いいね状態
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/ideas/{id}/apply:
+    post:
+      tags:
+        - Ideas
+      summary: アイデアに応募
+      description: 指定されたアイデアに参加応募を行います
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdeaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  maxLength: 1000
+                  example: "バックエンド開発を担当したいです"
+                motivation:
+                  type: string
+                  maxLength: 1000
+                  example: "このアイデアに強く共感します"
+      responses:
+        '201':
+          description: 応募成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      application:
+                        $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/ideas/{id}/applications:
+    get:
+      tags:
+        - Ideas
+      summary: アイデアの応募一覧取得
+      description: アイデア作成者のみ、そのアイデアへの応募一覧を取得できます
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdeaId'
+      responses:
+        '200':
+          description: 応募一覧取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      applications:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ApplicationDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/ideas/{id}/applications/{applicationId}:
+    put:
+      tags:
+        - Ideas
+      summary: 応募の承認・拒否
+      description: アイデア作成者が応募を承認または拒否します
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdeaId'
+        - $ref: '#/components/parameters/ApplicationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                  example: "approve"
+                message:
+                  type: string
+                  maxLength: 500
+                  example: "ぜひ一緒に開発しましょう！"
+      responses:
+        '200':
+          description: 応募審査成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      application:
+                        $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===== 応募関連 =====
+  /api/applications/me:
+    get:
+      tags:
+        - Applications
+      summary: 自分の応募一覧取得
+      description: 認証済みユーザーの応募履歴を取得します
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 応募一覧取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      applications:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ApplicationDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/applications/{id}/create-team:
+    post:
+      tags:
+        - Applications
+      summary: 承認済み応募からチーム作成
+      description: 承認済みの応募からチームを作成します
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '201':
+          description: チーム作成成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      team:
+                        $ref: '#/components/schemas/Team'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===== チーム関連 =====
+  /api/teams/me:
+    get:
+      tags:
+        - Teams
+      summary: 参加チーム一覧取得
+      description: 認証済みユーザーが参加しているチーム一覧を取得します
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: チーム一覧取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      teams:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Team'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/teams/{id}:
+    get:
+      tags:
+        - Teams
+      summary: チーム詳細取得
+      description: 指定されたチームの詳細情報を取得します（チームメンバーのみ）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: チーム詳細取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      team:
+                        $ref: '#/components/schemas/TeamDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Teams
+      summary: チーム解散
+      description: チームリーダーがチームを解散します
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: チーム解散成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/teams/{id}/discord:
+    put:
+      tags:
+        - Teams
+      summary: Discord招待URL設定
+      description: チームリーダーがDiscord招待URLを設定します
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TeamId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - discord_url
+              properties:
+                discord_url:
+                  type: string
+                  format: uri
+                  example: "https://discord.gg/invite-code"
+      responses:
+        '200':
+          description: Discord URL設定成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      discord_url:
+                        type: string
+                        format: uri
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===== 作品関連 =====
+  /api/works:
+    get:
+      tags:
+        - Works
+      summary: 作品一覧取得
+      description: 投稿された作品の一覧を取得します
+      parameters:
+        - name: page
+          in: query
+          description: ページ番号
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: 1ページあたりの件数
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: 作品一覧取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      works:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Work'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Works
+      summary: 作品投稿
+      description: 新しい作品を投稿します
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - team_id
+              properties:
+                title:
+                  type: string
+                  maxLength: 100
+                  example: "TaskFlow - チーム向けタスク管理"
+                description:
+                  type: string
+                  maxLength: 2000
+                  example: "リアルタイム同期機能付きのタスク管理アプリです"
+                demo_url:
+                  type: string
+                  format: uri
+                  example: "https://taskflow-demo.pages.dev"
+                repository_url:
+                  type: string
+                  format: uri
+                  example: "https://github.com/team/taskflow"
+                technologies:
+                  type: array
+                  items:
+                    type: string
+                  example: ["React", "Node.js", "MongoDB"]
+                team_id:
+                  type: integer
+                  example: 1
+      responses:
+        '201':
+          description: 作品投稿成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      work:
+                        $ref: '#/components/schemas/Work'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/works/{id}:
+    get:
+      tags:
+        - Works
+      summary: 作品詳細取得
+      description: 指定された作品の詳細情報を取得します
+      parameters:
+        - $ref: '#/components/parameters/WorkId'
+      responses:
+        '200':
+          description: 作品詳細取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      work:
+                        $ref: '#/components/schemas/WorkDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/works/{id}/vote:
+    post:
+      tags:
+        - Works
+      summary: 作品に投票/投票解除
+      description: 指定された作品に投票または投票解除を行います
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkId'
+      responses:
+        '200':
+          description: 投票処理成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      voted:
+                        type: boolean
+                        description: 投票状態
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===== 通知関連 =====
+  /api/notifications:
+    get:
+      tags:
+        - Notifications
+      summary: 通知一覧取得
+      description: 認証済みユーザーの通知一覧を取得します
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: ページ番号
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: 1ページあたりの件数
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: unread_only
+          in: query
+          description: 未読のみ取得
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 通知一覧取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      notifications:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Notification'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/notifications/unread-count:
+    get:
+      tags:
+        - Notifications
+      summary: 未読通知数取得
+      description: 認証済みユーザーの未読通知数を取得します
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 未読通知数取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      count:
+                        type: integer
+                        example: 3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/notifications/{id}/read:
+    put:
+      tags:
+        - Notifications
+      summary: 通知既読マーク
+      description: 指定された通知を既読にします
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '200':
+          description: 既読処理成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/notifications/read-all:
+    put:
+      tags:
+        - Notifications
+      summary: 全通知既読マーク
+      description: 認証済みユーザーの全ての通知を既読にします
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 全既読処理成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/notifications/{id}:
+    delete:
+      tags:
+        - Notifications
+      summary: 通知削除
+      description: 指定された通知を削除します
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '200':
+          description: 通知削除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ===== 管理者機能 =====
+  /api/admin/stats:
+    get:
+      tags:
+        - Admin
+      summary: 統計情報取得
+      description: プラットフォーム全体の統計情報を取得します（管理者のみ）
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 統計情報取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      stats:
+                        $ref: '#/components/schemas/AdminStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ===== ヘルスチェック =====
+  /health:
+    get:
+      tags:
+        - System
+      summary: ヘルスチェック
+      description: APIサーバーの動作状況を確認します
+      responses:
+        '200':
+          description: サーバー正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  service:
+                    type: string
+                    example: "RAIDHack API"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWTトークンをAuthorizationヘッダーに含めてください
+
+  parameters:
+    IdeaId:
+      name: id
+      in: path
+      required: true
+      description: アイデアID
+      schema:
+        type: integer
+        example: 1
+
+    ApplicationId:
+      name: applicationId
+      in: path
+      required: true
+      description: 応募ID
+      schema:
+        type: integer
+        example: 1
+
+    TeamId:
+      name: id
+      in: path
+      required: true
+      description: チームID
+      schema:
+        type: integer
+        example: 1
+
+    WorkId:
+      name: id
+      in: path
+      required: true
+      description: 作品ID
+      schema:
+        type: integer
+        example: 1
+
+    NotificationId:
+      name: id
+      in: path
+      required: true
+      description: 通知ID
+      schema:
+        type: integer
+        example: 1
+
+  responses:
+    BadRequest:
+      description: リクエストが不正です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: 認証が必要です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: アクセス権限がありません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: リソースが見つかりません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "操作が正常に完了しました"
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "エラーが発生しました"
+        error:
+          type: string
+          example: "詳細なエラーメッセージ"
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - username
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        username:
+          type: string
+          example: "developer_user"
+        bio:
+          type: string
+          nullable: true
+          example: "フロントエンド開発者です"
+        skills:
+          type: array
+          items:
+            type: string
+          example: ["React", "TypeScript", "CSS"]
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/avatar.jpg"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00.000Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00.000Z"
+
+    Idea:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - user_id
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "タスク管理アプリ"
+        description:
+          type: string
+          example: "チーム向けの効率的なタスク管理ツール"
+        required_skills:
+          type: array
+          items:
+            type: string
+          example: ["React", "Node.js", "MongoDB"]
+        user_id:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum: [open, development, completed]
+          example: "open"
+        like_count:
+          type: integer
+          example: 5
+        user_liked:
+          type: boolean
+          example: false
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            username:
+              type: string
+              example: "developer_user"
+            avatar_url:
+              type: string
+              format: uri
+              nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    IdeaDetail:
+      allOf:
+        - $ref: '#/components/schemas/Idea'
+        - type: object
+          properties:
+            applications:
+              type: array
+              items:
+                $ref: '#/components/schemas/Application'
+
+    Application:
+      type: object
+      required:
+        - id
+        - idea_id
+        - applicant_id
+        - status
+        - applied_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        idea_id:
+          type: integer
+          example: 1
+        applicant_id:
+          type: integer
+          example: 2
+        message:
+          type: string
+          nullable: true
+          example: "バックエンド開発を担当したいです"
+        motivation:
+          type: string
+          nullable: true
+          example: "このアイデアに強く共感します"
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+          example: "pending"
+        applied_at:
+          type: string
+          format: date-time
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        review_message:
+          type: string
+          nullable: true
+
+    ApplicationDetail:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          properties:
+            idea:
+              type: object
+              properties:
+                id:
+                  type: integer
+                title:
+                  type: string
+                description:
+                  type: string
+                username:
+                  type: string
+            applicant:
+              $ref: '#/components/schemas/User'
+
+    Team:
+      type: object
+      required:
+        - id
+        - idea_id
+        - name
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        idea_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "タスク管理アプリ チーム"
+        description:
+          type: string
+          nullable: true
+          example: "タスク管理アプリの開発チーム"
+        discord_invite_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://discord.gg/invite-code"
+        status:
+          type: string
+          enum: [active, completed, disbanded]
+          example: "active"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TeamDetail:
+      allOf:
+        - $ref: '#/components/schemas/Team'
+        - type: object
+          properties:
+            members:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/User'
+                  - type: object
+                    properties:
+                      role:
+                        type: string
+                        enum: [leader, member]
+                      joined_at:
+                        type: string
+                        format: date-time
+            idea:
+              $ref: '#/components/schemas/Idea'
+
+    Work:
+      type: object
+      required:
+        - id
+        - team_id
+        - title
+        - description
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        team_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "TaskFlow - チーム向けタスク管理"
+        description:
+          type: string
+          example: "リアルタイム同期機能付きのタスク管理アプリ"
+        demo_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://taskflow-demo.pages.dev"
+        repository_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://github.com/team/taskflow"
+        technologies:
+          type: array
+          items:
+            type: string
+          example: ["React", "Node.js", "MongoDB"]
+        status:
+          type: string
+          enum: [draft, submitted, published]
+          example: "published"
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        vote_count:
+          type: integer
+          example: 12
+        user_voted:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    WorkDetail:
+      allOf:
+        - $ref: '#/components/schemas/Work'
+        - type: object
+          properties:
+            team:
+              $ref: '#/components/schemas/Team'
+            team_members:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+
+    Notification:
+      type: object
+      required:
+        - id
+        - user_id
+        - type
+        - title
+        - message
+        - is_read
+        - created_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        type:
+          type: string
+          enum: [application, team_invite, application_status, new_idea, vote, system]
+          example: "application"
+        title:
+          type: string
+          example: "新しい応募があります"
+        message:
+          type: string
+          example: "あなたのアイデア「タスク管理アプリ」に新しい応募があります"
+        data:
+          type: object
+          nullable: true
+          example: {"ideaId": 1, "applicationId": 2}
+        is_read:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+
+    AdminStats:
+      type: object
+      properties:
+        users:
+          type: integer
+          example: 150
+        ideas:
+          type: integer
+          example: 45
+        teams:
+          type: integer
+          example: 20
+        works:
+          type: integer
+          example: 15
+        applications:
+          type: integer
+          example: 120
+        votes:
+          type: integer
+          example: 300
+        recent_activities:
+          type: object
+          properties:
+            new_users_today:
+              type: integer
+              example: 5
+            new_ideas_today:
+              type: integer
+              example: 3
+            new_works_today:
+              type: integer
+              example: 1
+
+    Pagination:
+      type: object
+      required:
+        - page
+        - limit
+        - total
+        - total_pages
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 100
+        total_pages:
+          type: integer
+          example: 5
+
+tags:
+  - name: Authentication
+    description: ユーザー認証関連のAPI
+  - name: Ideas
+    description: アイデア投稿・管理のAPI
+  - name: Applications
+    description: アイデアへの応募管理のAPI
+  - name: Teams
+    description: チーム管理のAPI
+  - name: Works
+    description: 作品投稿・管理のAPI
+  - name: Notifications
+    description: 通知システムのAPI
+  - name: Admin
+    description: 管理者機能のAPI
+  - name: System
+    description: システム関連のAPI
