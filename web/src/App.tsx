@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 import IndexPage from './pages/IndexPage'
 import TestApiPage from './pages/TestApiPage'
@@ -10,6 +10,7 @@ import UserPage from './pages/UserPage'
 import ProjectPage from './pages/ProjectPage'
 import { AuthProvider } from './contexts/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
+import Navigation from './components/Navigation'
 
 import './App.css'
 
@@ -18,23 +19,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div>
-          <nav style={{ padding: '20px', borderBottom: '1px solid #ccc', marginBottom: '20px' }}>
-            <Link to="/" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
-              Home
-            </Link>
-            <Link to="/login" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
-              Login
-            </Link>
-            <Link to="/new" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
-              投稿
-            </Link>
-            <Link to="/settings" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
-              設定
-            </Link>
-            <Link to="/test-api" style={{ textDecoration: 'none', color: '#007bff' }}>
-              Test API
-            </Link>
-          </nav>
+          <Navigation />
 
           <Routes>
             <Route path="/" element={<IndexPage />} />
