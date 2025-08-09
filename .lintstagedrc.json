@@ -1,0 +1,8 @@
+{
+  "web/**/*.{js,jsx,ts,tsx}": [
+    "cd web && npm run lint"
+  ],
+  "api/**/*.{js,ts}": [
+    "cd api && npx tsc --noEmit --skipLibCheck"
+  ]
+}

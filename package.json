@@ -1,18 +1,23 @@
 {
-    "name": "raidhack",
-    "version": "1.0.0",
-    "description": "RAIDHack - Cloudflare Pages + Workers Hello World",
-    "private": true,
-    "scripts": {
-        "watch:api": "nodemon --watch api/src --ext ts,js --exec \"cd api && npm run dev\"",
-        "watch:web": "nodemon --watch web --ext html,js,css --exec \"cd web && npm run dev\"",
-        "dev": "concurrently \"npm run watch:api\" \"npm run watch:web\""
-    },
-    "devDependencies": {
-        "concurrently": "^9.2.0",
-        "nodemon": "^3.1.10"
-    },
-    "engines": {
-        "node": ">=18.0.0"
-    }
+  "name": "raidhack",
+  "version": "1.0.0",
+  "description": "RAIDHack - Cloudflare Pages + Workers Hello World",
+  "private": true,
+  "scripts": {
+    "watch:api": "nodemon --watch api/src --ext ts,js --exec \"cd api && npm run dev\"",
+    "watch:web": "nodemon --watch web --ext html,js,css --exec \"cd web && npm run dev\"",
+    "dev": "concurrently \"npm run watch:api\" \"npm run watch:web\"",
+    "prepare": "husky",
+    "lint:web": "cd web && npm run lint",
+    "typecheck:api": "cd api && npx tsc --noEmit --skipLibCheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
+    "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
