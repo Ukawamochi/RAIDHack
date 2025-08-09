@@ -46,8 +46,8 @@ jobs:
           API_URL=$(echo "$deploy_output" | grep -oE 'https://[a-zA-Z0-9\-\.]+\.workers\.dev' | head -1)
           
           if [ -z "$API_URL" ]; then
-            # Fallback: construct likely URL pattern
-            API_URL="https://${WORKER_NAME}.workers.dev"
+            # Fallback: construct actual URL pattern (api.ukawamochi5.workers.dev)
+            API_URL="https://api.ukawamochi5.workers.dev"
             echo "Could not extract URL from deploy output, using fallback: $API_URL"
           else
             echo "Extracted deployed URL: $API_URL"
