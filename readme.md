@@ -66,6 +66,10 @@ wrangler d1 execute raidhack-db --file=database/schema-updated.sql
 # 通知テーブル追加
 wrangler d1 execute raidhack-db --file=database/add-notifications.sql
 
+# 不要テーブル削除・不足テーブル追加
+wrangler d1 execute raidhack-db --file=database/cleanup-unused-tables.sql
+wrangler d1 execute raidhack-db --file=database/add-missing-tables.sql
+
 # データクエリ
 wrangler d1 execute raidhack-db --command="SELECT * FROM users LIMIT 5"
 ```
@@ -129,26 +133,8 @@ cd api && npm run type-check
 ### 開発ルール
 1. **型安全性重視** - `any`型使用禁止
 2. **統一レスポンス** - API `success`・`message`必須
-3. **セキュリティ優先** - JWT・環境変数適切管理
-4. **シンプル設計** - Google風ミニマルデザイン
 
-### 貢献手順
-```bash
-# 1. フォーク・クローン
-git fork https://github.com/Ukawamochi/RAIDHack-api.git
-git clone YOUR_FORK_URL
 
-# 2. 機能ブランチ作成
-git checkout -b feature/amazing-feature
-
-# 3. 開発・テスト
-cd api && npm run dev
-cd web && npm run dev
-
-# 4. プルリクエスト
-git commit -m "feat: amazing feature"
-git push origin feature/amazing-feature
-```
 
 ## 📞 サポート
 
@@ -404,14 +390,5 @@ PUT  /api/admin/ideas/:id/status # ステータス更新
 POST /api/admin/notifications/system # システム通知
 ```
 
-## � サポート・お問い合わせ
-
-- **� バグ報告**: [GitHub Issues](https://github.com/Ukawamochi/RAIDHack-api/issues)
-- **💬 質問・議論**: [GitHub Discussions](https://github.com/Ukawamochi/RAIDHack-api/discussions)  
-- **� 詳細ガイド**: [LOCAL_SETUP.md](./LOCAL_SETUP.md)
-
----
-
-**注意**: `/web`ディレクトリは旧フロントエンド環境です。現在はAPIのみに集中して開発中のため、`npm run dev`は`/api`ディレクトリで実行してください。
 
 
