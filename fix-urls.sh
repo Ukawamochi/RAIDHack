@@ -16,7 +16,7 @@ for file in "${FILES[@]}"; do
   
   # Add API_BASE constant if not exists
   if ! grep -q "const API_BASE" "$file"; then
-    sed -i "4a\\const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';" "$file"
+    sed -i "4a\\const API_BASE = import.meta.env.API_BASE || 'http://localhost:8787';" "$file"
   fi
   
   # Replace hardcoded URLs
