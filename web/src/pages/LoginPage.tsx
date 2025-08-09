@@ -1,4 +1,20 @@
+import { useAuth } from '../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
+
 function LoginPage() {
+    const { isLoggedIn, login, logout } = useAuth()
+    const navigate = useNavigate()
+
+    const handleLogin = () => {
+        login()
+        // ログイン後はホームページにリダイレクト
+        navigate('/')
+    }
+
+    const handleLogout = () => {
+        logout()
+    }
+
     return (
         <div style={{ padding: '20px', textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
             <h1>ログイン</h1>
@@ -10,22 +26,46 @@ function LoginPage() {
                 border: '1px solid #ddd',
                 borderRadius: '8px',
                 padding: '30px',
-                backgroundColor: '#3c3838ff'
+                backgroundColor: '#f9f9f9'
             }}>
-                <p style={{ marginBottom: '20px' }}>🚧 ログイン機能は開発中です</p>
-                <button
-                    style={{
-                        padding: '12px 24px',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}
-                    onClick={() => alert('ログイン機能を準備中です！')}
-                >
-                    ログイン（準備中）
-                </button>
+                {!isLoggedIn ? (
+                    <>
+                        <p style={{ marginBottom: '20px', color: 'black' }}>仮ログイン機能</p>
+                        <button
+                            style={{
+                                padding: '12px 24px',
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                            onClick={handleLogin}
+                        >
+                            ログイン
+                        </button>
+                        <p style={{ marginTop: '15px', fontSize: '12px', color: '#666' }}>
+                            ※ これは開発用の仮ログイン機能です
+                        </p>
+                    </>
+                ) : (
+                    <>
+                        <p style={{ marginBottom: '20px' }}>✅ ログイン済み</p>
+                        <button
+                            style={{
+                                padding: '12px 24px',
+                                backgroundColor: '#dc3545',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                            onClick={handleLogout}
+                        >
+                            ログアウト
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     )
