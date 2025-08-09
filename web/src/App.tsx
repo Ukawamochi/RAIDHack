@@ -9,8 +9,8 @@ import TestApiPage from './pages/TestApiPage'
 import LoginPage from './pages/LoginPage'
 import NewPostPage from './pages/NewPostPage'
 import SettingsPage from './pages/SettingsPage'
-import UserPage from './pages/UserPage'
-import ProjectPage from './pages/ProjectPage'
+// import UserPage from './pages/UserPage'
+// import ProjectPage from './pages/ProjectPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 import './App.css'
@@ -54,8 +54,8 @@ function App() {
               <Route path="/test-api" element={<TestApiPage />} />
 
               {/* GitHub風ルート - ユーザーページとプロジェクトページ */}
-              <Route path="/:username/:project" element={<ProjectPage />} />
-              <Route path="/:username" element={<UserPage />} />
+              <Route path="/:username/:project" element={<></>} />
+              <Route path="/:username" element={<></>} />
 
               {/* 404ページ */}
               <Route path="*" element={<NotFoundPage />} />
