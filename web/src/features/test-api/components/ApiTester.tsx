@@ -20,7 +20,7 @@ function ApiTester() {
 
     try {
       const response = await fetch(endpoint)
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
@@ -46,15 +46,18 @@ function ApiTester() {
       fontFamily: 'Arial, sans-serif',
       maxWidth: '600px',
       margin: '50px auto',
-      padding: '20px'
+      padding: '20px',
+      backgroundColor: '#1a1a1a',
+      minHeight: '100vh',
+      color: '#ffffff'
     }}>
-      <h1>RAIDHack Hello World CI/CD working!</h1>
-      
-      <button 
+      <h1 style={{ color: '#ffffff' }}>RAIDHack Hello World CI/CD working!</h1>
+
+      <button
         onClick={testApi}
         disabled={isLoading}
         style={{
-          background: isLoading ? '#ccc' : '#666',
+          background: isLoading ? '#555555' : '#007bff',
           color: 'white',
           padding: '10px 20px',
           border: 'none',
@@ -65,29 +68,29 @@ function ApiTester() {
       >
         {isLoading ? 'テスト中...' : 'APIをテスト'}
       </button>
-      
+
       <div style={{
         marginTop: '20px',
         padding: '15px',
-        border: '1px solid #ccc',
+        border: '1px solid #444444',
         borderRadius: '4px',
         minHeight: '50px',
-        backgroundColor: '#ffffff'
+        backgroundColor: '#2a2a2a'
       }}>
         {!result ? (
-          <span style={{ color: '#666' }}>ここに結果が表示されます</span>
+          <span style={{ color: '#cccccc' }}>ここに結果が表示されます</span>
         ) : (
           <>
-            <div style={{ 
+            <div style={{
               color: result.success ? '#28a745' : '#dc3545',
               fontWeight: 'bold',
               marginBottom: '8px'
             }}>
               {result.success ? '✅ 成功' : '❌ エラー'}
             </div>
-            <div style={{ 
+            <div style={{
               marginBottom: '8px',
-              color: '#333333'
+              color: '#ffffff'
             }}>
               {result.message}
             </div>

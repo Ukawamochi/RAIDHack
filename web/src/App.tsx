@@ -1,29 +1,69 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+
+import { AuthProvider } from './contexts/AuthContext'
+import Header from './components/Header'
+import ProtectedRoute from './components/ProtectedRoute'
 
 import IndexPage from './pages/IndexPage'
 import TestApiPage from './pages/TestApiPage'
+import LoginPage from './pages/LoginPage'
+import NewPostPage from './pages/NewPostPage'
+import SettingsPage from './pages/SettingsPage'
+import UserPage from './pages/UserPage'
+import ProjectPage from './pages/ProjectPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 import './App.css'
 
 function App() {
   return (
-    <Router>
-      <div>
-        <nav style={{ padding: '20px', borderBottom: '1px solid #ccc', marginBottom: '20px' }}>
-          <Link to="/" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
-            Home
-          </Link>
-          <Link to="/test-api" style={{ textDecoration: 'none', color: '#007bff' }}>
-            Test API
-          </Link>
-        </nav>
+    <AuthProvider>
+      <Router>
+        <div style={{
+          minHeight: '100vh',
+          backgroundColor: '#1a1a1a', // ダークグレー背景
+          width: '100%'
+        }}>
+          <Header />
 
-        <Routes>
-          <Route path="/" element={<IndexPage />} />
-          <Route path="/test-api" element={<TestApiPage />} />
-        </Routes>
-      </div>
-    </Router>
+          <main style={{ width: '100%' }}>
+            <Routes>
+              {/* パブリックルート */}
+              <Route path="/" element={<IndexPage />} />
+              <Route path="/login" element={<LoginPage />} />
+
+              {/* 認証保護ルート */}
+              <Route
+                path="/new"
+                element={
+                  <ProtectedRoute>
+                    <NewPostPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* テスト用ルート */}
+              <Route path="/test-api" element={<TestApiPage />} />
+
+              {/* GitHub風ルート - ユーザーページとプロジェクトページ */}
+              <Route path="/:username/:project" element={<ProjectPage />} />
+              <Route path="/:username" element={<UserPage />} />
+
+              {/* 404ページ */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </AuthProvider>
   )
 }
 
