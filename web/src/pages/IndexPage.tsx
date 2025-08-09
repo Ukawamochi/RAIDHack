@@ -77,7 +77,7 @@ function IndexPage() {
       <div style={{ marginBottom: '30px', textAlign: 'center' }}>
         <div style={{ display: 'inline-flex', gap: '10px', flexWrap: 'wrap' }}>
           {[
-            { key: 'all', label: 'すべて' },
+            { key: 'all' as const, label: 'すべて' },
             { key: 'open' as const, label: '募集中' },
             { key: 'development' as const, label: '進行中' },
             { key: 'completed' as const, label: 'Done' }
