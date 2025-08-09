@@ -14,8 +14,6 @@ import AdminPage from './pages/AdminPage'
 import { AuthProvider } from './features/auth'
 import Navigation from './components/Navigation'
 
-import './App.css'
-
 function App() {
   return (
     <AuthProvider>

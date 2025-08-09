@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import StatusBadge from '../components/StatusBadge'
 import { Idea } from '../types/api'
 import { useAuth } from '../features/auth'
-import '../App.css'
 
 function IndexPage() {
   const [ideas, setIdeas] = useState<Idea[]>([])
