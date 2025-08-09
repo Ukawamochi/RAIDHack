@@ -16,20 +16,21 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div>
+        <div className="flex">
           <Navigation />
+          <div className="flex-1 ml-20">
+            <Routes>
+              <Route path="/" element={<IndexPage />} />
+              <Route path="/test-api" element={<TestApiPage />} />
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-          <Routes>
-            <Route path="/" element={<IndexPage />} />
-            <Route path="/test-api" element={<TestApiPage />} />
-            <Route path="/auth/callback" element={<AuthCallbackPage />} />
-
-            <Route path="/new" element={<NewPostPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/:username" element={<UserPage />} />
-            <Route path="/:username/:project" element={<ProjectPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+              <Route path="/new" element={<NewPostPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/:username" element={<UserPage />} />
+              <Route path="/:username/:project" element={<ProjectPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </div>
         </div>
       </Router>
     </AuthProvider>
