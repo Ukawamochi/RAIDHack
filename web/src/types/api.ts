@@ -1,10 +1,12 @@
-export interface ApiResponse {
-  success: boolean;
-  message: string;
-  data?: Record<string, unknown>;
-}
-
-export interface ApiError {
-  message: string;
-  status?: number;
-}
+// Re-export commonly used types from generated client
+export type {
+  User,
+  Idea,
+  Team,
+  Work,
+  Application,
+  Notification,
+  SuccessResponse,
+  ErrorResponse,
+  Pagination
+} from '../generated'

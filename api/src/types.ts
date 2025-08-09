@@ -4,6 +4,8 @@
 export interface Env {
   DB: D1Database;
   JWT_SECRET: string;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
 }
 
 export interface AppContext {
@@ -38,9 +40,9 @@ export interface User {
   username: string;
   bio?: string;
   skills: string[];
-  avatar_url?: string;
-  created_at: string;
-  updated_at: string;
+  avatarUrl?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthResponse {
