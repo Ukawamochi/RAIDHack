@@ -7,7 +7,13 @@ const app = new Hono<AppContext>();
 
 // CORS設定
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'https://raidhack-web.pages.dev'],
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000', 
+    'https://raidhack-web.pages.dev',
+    'https://*.raidhack-web.pages.dev', // PR環境対応
+    'https://*.pages.dev' // 汎用Pagesドメイン
+  ],
   allowHeaders: ['Content-Type', 'Authorization'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
@@ -25,5 +31,6 @@ app.onError((error, c) => {
     error: error.message
   }, 500);
 });
+
 
 export default app;
