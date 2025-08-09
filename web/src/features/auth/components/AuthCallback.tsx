@@ -13,7 +13,6 @@ export default function AuthCallback() {
     const handleCallback = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search)
-        console.log(urlParams);
         if (urlParams.size === 0) {
           return
         }
@@ -37,15 +36,9 @@ export default function AuthCallback() {
 
         // Clear the URL to prevent code reuse
         window.history.replaceState({}, document.title, window.location.pathname)
-
-        // Use the generated API client for authentication
-        console.log('Sending auth request with code:', code?.substring(0, 10) + '...')
-        
         const authResponse = await authApi.apiAuthGithubCallbackPost({
           code: code
         })
-
-        console.log('Auth response:', authResponse.data)
 
         if (!authResponse.data.success) {
           throw new Error(`Authentication error: ${authResponse.data.message}`)

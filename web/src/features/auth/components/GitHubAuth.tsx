@@ -52,7 +52,7 @@ export default function GitHubAuth() {
             e.currentTarget.style.backgroundColor = '#da3633'
           }}
         >
-          Sign out
+          ログアウト
         </button>
       </div>
     )

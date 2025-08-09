@@ -18,7 +18,6 @@ authRoutes.post('/github/callback', async (c) => {
     const body = await c.req.json();
     const { code } = body;
 
-    console.log('GitHub callback called with code:', code ? code.substring(0, 10) + '...' : 'missing');
 
     // バリデーション
     if (!code) {
@@ -70,8 +69,6 @@ authRoutes.post('/github/callback', async (c) => {
 
     const tokenData = await tokenResponse.json() as any;
     
-    console.log('Token exchange response:', tokenData);
-    
     if (tokenData.error) {
       const errorResponse: ErrorResponse = {
         success: false,
@@ -108,10 +105,16 @@ authRoutes.post('/github/callback', async (c) => {
       })
     });
 
-    console.log('Token validation status:', tokenValidationResponse.status);
     if (tokenValidationResponse.ok) {
       const validationData = await tokenValidationResponse.json();
-      console.log('Token validation response:', validationData);
+    } else {
+      console.error('Token validation failed:', tokenValidationResponse.status, tokenValidationResponse.statusText);
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "GitHubトークンの検証に失敗しました",
+        error: `Token validation failed: ${tokenValidationResponse.status}`
+      };
+      return c.json(errorResponse, 401);
     }
 
     // GitHub からユーザー情報を取得
@@ -164,6 +167,16 @@ authRoutes.post('/github/callback', async (c) => {
         const primaryEmail = emails.find((e: any) => e.primary);
         email = primaryEmail ? primaryEmail.email : emails[0]?.email;
       }
+    }
+
+    // メールアドレスが取得できない場合のエラーハンドリング
+    if (!email) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "GitHubアカウントからメールアドレスを取得できませんでした",
+        error: "No email address available from GitHub account"
+      };
+      return c.json(errorResponse, 400);
     }
 
     // データベースで既存のユーザーを確認

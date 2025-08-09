@@ -1,5 +1,3 @@
-/* tslint:disable */
-/* eslint-disable */
 /**
  * RAIDHack API
  * RAIDHackは、開発者がアイデアを共有し、ハッカソンをするためのプラットフォームです。 
