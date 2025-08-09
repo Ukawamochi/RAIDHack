@@ -21,6 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     name: Cleanup PR Environment
     steps:
+      - name: Get PR number
+        id: pr
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "number=${{ github.event.inputs.pr_number }}" >> $GITHUB_OUTPUT
+          fi
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -40,29 +48,22 @@ jobs:
       - name: Delete Workers API
         run: |
           cd api
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            PR_NUMBER="${{ github.event.number }}"
-          else
-            PR_NUMBER="${{ github.event.inputs.pr_number }}"
-          fi
+          PR_NUMBER="${{ steps.pr.outputs.number }}"
 
           WORKER_NAME="raidhack-api-pr-$PR_NUMBER"
-          echo "Attempting to delete Worker: $WORKER_NAME"
+          echo "Deleting Worker: $WORKER_NAME"
 
           if npx wrangler@latest whoami > /dev/null 2>&1; then
-            echo "Wrangler authentication successful"
-            echo "Deleting worker idempotently (will succeed even if absent)..."
             delete_output=$(npx wrangler@latest delete --name "$WORKER_NAME" --force 2>&1 || true)
-            echo "$delete_output"
             if echo "$delete_output" | grep -qiE 'deleted|success'; then
-              echo "Worker deletion confirmed"
+              echo "Worker deleted"
             elif echo "$delete_output" | grep -qiE 'not found|could not find|404'; then
               echo "Worker already absent"
             else
-              echo "Worker delete attempted; unable to confirm from output"
+              echo "Delete attempted"
             fi
           else
-            echo "Wrangler authentication failed"
+            echo "ERROR: Wrangler authentication failed"
             exit 1
           fi
         env:
@@ -76,56 +77,58 @@ jobs:
       - name: Delete Cloudflare Pages deployments
         run: |
           cd web
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            PR_NUMBER="${{ github.event.number }}"
-          else
-            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          PR_NUMBER="${{ steps.pr.outputs.number }}"
+          
+          echo "Cleaning up Pages deployments for PR-${PR_NUMBER}"
+          
+          # Get Cloudflare identifiers with error handling
+          ACCOUNT_RESPONSE=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts")
+          
+          ACCOUNT_ID=$(echo "$ACCOUNT_RESPONSE" | jq -r '.result[0].id // empty' 2>/dev/null)
+          if [ -z "$ACCOUNT_ID" ]; then
+            echo "No account found or API error - skipping Pages cleanup"
+            exit 0
           fi
           
-          echo "🗑️ Cleaning up Pages deployments for PR-${PR_NUMBER}"
+          PROJECT_RESPONSE=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects")
           
-          # Get Cloudflare identifiers
-          ACCOUNT_ID=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts" | jq -r '.result[0].id')
-          
-          PROJECT_ID=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects" | \
-            jq -r '.result[] | select(.name == "raidhack-web") | .id')
+          PROJECT_ID=$(echo "$PROJECT_RESPONSE" | jq -r '.result[]? | select(.name == "raidhack-web") | .id // empty' 2>/dev/null)
+          if [ -z "$PROJECT_ID" ]; then
+            echo "No raidhack-web project found - skipping Pages cleanup"
+            exit 0
+          fi
           
           # Get and delete PR deployments
-          DEPLOYMENTS=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects/$PROJECT_ID/deployments" | \
-            jq -r --arg branch "pr-${PR_NUMBER}" \
-            '.result[] | select(.deployment_trigger.metadata.branch == $branch) | .id')
+          DEPLOYMENT_RESPONSE=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects/$PROJECT_ID/deployments")
+          
+          DEPLOYMENTS=$(echo "$DEPLOYMENT_RESPONSE" | jq -r --arg branch "pr-${PR_NUMBER}" \
+            '.result[]? | select(.deployment_trigger.metadata.branch == $branch) | .id // empty' 2>/dev/null)
           
           if [ -n "$DEPLOYMENTS" ]; then
-            echo "Found deployments to delete:"
-            DELETED_COUNT=0
+            DEPLOY_COUNT=$(echo "$DEPLOYMENTS" | wc -l)
+            echo "Deleting $DEPLOY_COUNT deployments"
             echo "$DEPLOYMENTS" | while read -r deployment_id; do
               if [ -n "$deployment_id" ]; then
                 curl -s -X DELETE -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
                   "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects/$PROJECT_ID/deployments/$deployment_id" \
                   > /dev/null
-                echo "  ✓ $deployment_id"
-                DELETED_COUNT=$((DELETED_COUNT + 1))
               fi
             done
-            echo "Deleted $(echo "$DEPLOYMENTS" | wc -l) deployments"
+            echo "Cleanup completed"
           else
-            echo "No deployments found for PR-${PR_NUMBER}"
+            echo "No deployments found for PR-${PR_NUMBER} - already clean"
           fi
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Verify cleanup completion
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            PR_NUMBER="${{ github.event.number }}"
-          else
-            PR_NUMBER="${{ github.event.inputs.pr_number }}"
-          fi
+          PR_NUMBER="${{ steps.pr.outputs.number }}"
           
-          echo "🔍 Verifying cleanup for PR-${PR_NUMBER}"
+          echo "Verifying cleanup for PR-${PR_NUMBER}"
           
           # Check Worker
           WORKER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -136,8 +139,8 @@ jobs:
             "https://pr-${PR_NUMBER}.raidhack-web.pages.dev" --max-time 5)
           
           echo "Results:"
-          echo "  Worker: $([ "$WORKER_STATUS" = "404" ] && echo "✓ Deleted" || echo "⚠ Active ($WORKER_STATUS)")"
-          echo "  Pages:  $([ "$PAGES_STATUS" = "404" ] && echo "✓ Deleted" || echo "⚠ Active ($PAGES_STATUS)")"
+          echo "  Worker: $([ "$WORKER_STATUS" = "404" ] && echo "Deleted" || echo "Active ($WORKER_STATUS)")"
+          echo "  Pages:  $([ "$PAGES_STATUS" = "404" ] && echo "Deleted" || echo "Active ($PAGES_STATUS)")"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
@@ -147,7 +150,7 @@ jobs:
         with:
           script: |
             const prNumber = ${{ github.event.number }};
-            const comment = `## 🧹 PR環境削除完了\n\nPR #${prNumber} の環境を削除しました。\n\n- ✅ API Worker削除\n- ✅ Pages デプロイメント削除`;
+            const comment = `## PR環境削除完了\n\nPR #${prNumber} の環境を削除しました。\n\n- API Worker削除\n- Pages デプロイメント削除`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
