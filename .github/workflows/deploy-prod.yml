@@ -136,10 +136,7 @@ jobs:
           
           # wrangler コマンドでデプロイ
           npx wrangler pages deploy dist \
-            --project-name="raidhack-web" \
-            --production \
-            --compatibility-date="2024-01-15" \
-            --verbose
+            --project-name="raidhack-web"
           
           # デプロイ完了通知
           echo "=== Deployment Completed ==="
