@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 
 import IndexPage from './pages/IndexPage'
 import TestApiPage from './pages/TestApiPage'
+import LoginPage from './pages/LoginPage'
 
 import './App.css'
 
@@ -13,14 +14,18 @@ function App() {
           <Link to="/" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
             Home
           </Link>
-          <Link to="/test-api" style={{ textDecoration: 'none', color: '#007bff' }}>
+          <Link to="/test-api" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
             Test API
+          </Link>
+          <Link to="/login" style={{ textDecoration: 'none', color: '#007bff' }}>
+            Login
           </Link>
         </nav>
 
         <Routes>
           <Route path="/" element={<IndexPage />} />
           <Route path="/test-api" element={<TestApiPage />} />
+          <Route path="/login" element={<LoginPage />} />
         </Routes>
       </div>
     </Router>
