@@ -35,7 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export { AuthContext }
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787'
+const API_BASE = import.meta.env.API_BASE || 'http://localhost:8787'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)

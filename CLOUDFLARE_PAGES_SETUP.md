@@ -15,7 +15,7 @@
 ## 2. 環境変数の設定
 
 Pages設定で以下の環境変数を追加:
-- `VITE_API_BASE`: `https://raidhack-api.workers.dev`
+- `API_BASE`: `https://raidhack-api.workers.dev`
 
 
 ## 3. Production branchの設定
