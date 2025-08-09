@@ -14,10 +14,6 @@ binding = "DB"
 database_name = "raidhack-db"
 database_id = "351ec61c-6b58-448f-a888-c9df33a3045f"
 
-# 環境変数（wrangler secret putで設定）
-# wrangler secret put JWT_SECRET --env development
-# wrangler secret put JWT_SECRET --env production
-
 [build]
 command = "npm run build"
 

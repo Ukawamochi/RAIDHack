@@ -38,7 +38,7 @@ jobs:
           echo "Deploying Worker: $WORKER_NAME"
           
           # Wrangler deploy and capture the actual URL
-          deploy_output=$(npx wrangler deploy --minify --name "$WORKER_NAME" 2>&1)
+          deploy_output=$(npx wrangler deploy --minify --name "$WORKER_NAME" --var JWT_SECRET:"$JWT_SECRET" 2>&1)
           echo "Deploy output:"
           echo "$deploy_output"
           
@@ -60,8 +60,10 @@ jobs:
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
   deploy-web:
     runs-on: ubuntu-latest
