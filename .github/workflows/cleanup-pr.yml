@@ -84,26 +84,89 @@ jobs:
           fi
           BRANCH_NAME="pr-${PR_NUMBER}"
           echo "Attempting to cleanup Pages deployments for branch: $BRANCH_NAME"
+          
           if npx wrangler@latest whoami > /dev/null 2>&1; then
             echo "Wrangler authentication successful for Pages"
             if npx wrangler@latest pages project list | grep -q "$PROJECT_NAME"; then
               echo "Pages project $PROJECT_NAME found"
-              echo "Getting deployment IDs for branch: $BRANCH_NAME"
+              echo "Getting deployment information for branch: $BRANCH_NAME"
+              
+              # JSON構造を確認してデバッグ情報を出力
               JSON=$(npx wrangler@latest pages deployments list --project-name "$PROJECT_NAME" --format json 2>/dev/null || echo "[]")
-              echo "$JSON" | head -c 5000 >/dev/null # avoid flooding logs
-              DEPLOYMENT_IDS=$(echo "$JSON" | jq -r --arg branch "$BRANCH_NAME" '.[] | select((.deployment_trigger.metadata.branch // "") == $branch) | .id' 2>/dev/null || echo "")
+              echo "Raw JSON response (first 1000 chars):"
+              echo "$JSON" | head -c 1000
+              echo ""
+              
+              # 複数の可能性のあるフィールド名で検索
+              echo "Attempting multiple branch field patterns..."
+              DEPLOYMENT_IDS=""
+              
+              # Pattern 1: .branch
+              PATTERN1=$(echo "$JSON" | jq -r --arg branch "$BRANCH_NAME" '.[] | select(.branch == $branch) | .id' 2>/dev/null || echo "")
+              if [ -n "$PATTERN1" ]; then
+                echo "Found deployments using .branch pattern"
+                DEPLOYMENT_IDS="$PATTERN1"
+              fi
+              
+              # Pattern 2: .environment
+              if [ -z "$DEPLOYMENT_IDS" ]; then
+                PATTERN2=$(echo "$JSON" | jq -r --arg branch "$BRANCH_NAME" '.[] | select(.environment == $branch) | .id' 2>/dev/null || echo "")
+                if [ -n "$PATTERN2" ]; then
+                  echo "Found deployments using .environment pattern"
+                  DEPLOYMENT_IDS="$PATTERN2"
+                fi
+              fi
+              
+              # Pattern 3: .deployment_trigger.metadata.branch
+              if [ -z "$DEPLOYMENT_IDS" ]; then
+                PATTERN3=$(echo "$JSON" | jq -r --arg branch "$BRANCH_NAME" '.[] | select((.deployment_trigger.metadata.branch // "") == $branch) | .id' 2>/dev/null || echo "")
+                if [ -n "$PATTERN3" ]; then
+                  echo "Found deployments using .deployment_trigger.metadata.branch pattern"
+                  DEPLOYMENT_IDS="$PATTERN3"
+                fi
+              fi
+              
+              # Pattern 4: URL-based matching for preview deployments
+              if [ -z "$DEPLOYMENT_IDS" ]; then
+                PREVIEW_URL_PATTERN="$BRANCH_NAME.raidhack-web.pages.dev"
+                PATTERN4=$(echo "$JSON" | jq -r --arg pattern "$PREVIEW_URL_PATTERN" '.[] | select(.url | contains($pattern)) | .id' 2>/dev/null || echo "")
+                if [ -n "$PATTERN4" ]; then
+                  echo "Found deployments using URL pattern matching"
+                  DEPLOYMENT_IDS="$PATTERN4"
+                fi
+              fi
+              
               if [ -n "$DEPLOYMENT_IDS" ]; then
                 echo "Found deployment IDs for branch $BRANCH_NAME:"
                 echo "$DEPLOYMENT_IDS"
                 echo "$DEPLOYMENT_IDS" | while read -r deployment_id; do
                   if [ -n "$deployment_id" ]; then
                     echo "Deleting deployment: $deployment_id"
-                    npx wrangler@latest pages deployment delete "$deployment_id" --project-name "$PROJECT_NAME" --force || echo "Failed to delete deployment $deployment_id"
+                    delete_result=$(npx wrangler@latest pages deployment delete "$deployment_id" --project-name "$PROJECT_NAME" --force 2>&1 || echo "FAILED")
+                    echo "Delete result: $delete_result"
+                    if echo "$delete_result" | grep -qiE 'success|deleted|removed'; then
+                      echo "✅ Successfully deleted deployment $deployment_id"
+                    else
+                      echo "⚠️ Delete command executed but result unclear for $deployment_id"
+                    fi
                   fi
                 done
                 echo "All deployments for branch $BRANCH_NAME processed"
+                
+                # 追加: ブランチプレビューの無効化試行
+                echo "Attempting to disable branch preview for: $BRANCH_NAME"
+                disable_result=$(npx wrangler@latest pages project edit "$PROJECT_NAME" --branch-preview-disabled="$BRANCH_NAME" 2>&1 || echo "Branch preview disable not supported")
+                echo "Branch preview disable result: $disable_result"
+                
               else
-                echo "No deployments found for branch $BRANCH_NAME (already cleaned up or never existed)"
+                echo "No deployments found for branch $BRANCH_NAME"
+                echo "Checking if any deployments exist at all..."
+                TOTAL_DEPLOYMENTS=$(echo "$JSON" | jq length 2>/dev/null || echo "0")
+                echo "Total deployments in project: $TOTAL_DEPLOYMENTS"
+                if [ "$TOTAL_DEPLOYMENTS" -gt 0 ]; then
+                  echo "Sample deployment structure:"
+                  echo "$JSON" | jq '.[0] | keys' 2>/dev/null || echo "Could not parse deployment structure"
+                fi
               fi
             else
               echo "Pages project $PROJECT_NAME not found"
@@ -117,7 +180,7 @@ jobs:
 
       - name: Verify cleanup completion
         run: |
-          echo "=== Cleanup Verification ==="
+          echo "=== Enhanced Cleanup Verification ==="
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             PR_NUMBER="${{ github.event.number }}"
           else
@@ -126,36 +189,69 @@ jobs:
           echo "PR Number: $PR_NUMBER"
           echo "Expected Worker Name: raidhack-api-pr-$PR_NUMBER"
           echo "Expected Pages Branch: pr-$PR_NUMBER"
+          
+          # Worker verification
           echo "Checking Worker reachability..."
-          URL="https://raidhack-api-pr-$PR_NUMBER.ukawamochi5.workers.dev"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || echo "000")
-          echo "Worker HTTP status: $STATUS"
-          if [ "$STATUS" = "404" ] || [ "$STATUS" = "000" ]; then
+          WORKER_URL="https://raidhack-api-pr-$PR_NUMBER.ukawamochi5.workers.dev"
+          WORKER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$WORKER_URL" --max-time 10 || echo "000")
+          echo "Worker HTTP status: $WORKER_STATUS"
+          if [ "$WORKER_STATUS" = "404" ] || [ "$WORKER_STATUS" = "000" ] || [ "$WORKER_STATUS" = "522" ]; then
             echo "✅ Worker appears deleted or unreachable"
           else
-            echo "⚠️ WARNING: Worker may still be reachable ($STATUS)"
+            echo "⚠️ WARNING: Worker may still be reachable ($WORKER_STATUS)"
           fi
 
           cd web
-          echo "Checking Pages deployments..."
-          REMAINING=$(npx wrangler@latest pages deployments list --project-name "raidhack-web" --format json 2>/dev/null | \
-            jq -r --arg branch "pr-$PR_NUMBER" '.[] | select((.deployment_trigger.metadata.branch // "") == $branch) | .id' 2>/dev/null | wc -l || echo "0")
+          echo "Checking Pages deployments after cleanup..."
+          JSON=$(npx wrangler@latest pages deployments list --project-name "raidhack-web" --format json 2>/dev/null || echo "[]")
+          
+          # Check all possible patterns for remaining deployments
+          REMAINING_PATTERN1=$(echo "$JSON" | jq -r --arg branch "pr-$PR_NUMBER" '.[] | select(.branch == $branch) | .id' 2>/dev/null | wc -l || echo "0")
+          REMAINING_PATTERN2=$(echo "$JSON" | jq -r --arg branch "pr-$PR_NUMBER" '.[] | select(.environment == $branch) | .id' 2>/dev/null | wc -l || echo "0")
+          REMAINING_PATTERN3=$(echo "$JSON" | jq -r --arg branch "pr-$PR_NUMBER" '.[] | select((.deployment_trigger.metadata.branch // "") == $branch) | .id' 2>/dev/null | wc -l || echo "0")
+          REMAINING_URL=$(echo "$JSON" | jq -r --arg pattern "pr-$PR_NUMBER.raidhack-web.pages.dev" '.[] | select(.url | contains($pattern)) | .id' 2>/dev/null | wc -l || echo "0")
 
-          if [ "$REMAINING" -gt 0 ]; then
-            echo "⚠️ WARNING: $REMAINING Pages deployments still exist for this PR"
+          TOTAL_REMAINING=$((REMAINING_PATTERN1 + REMAINING_PATTERN2 + REMAINING_PATTERN3 + REMAINING_URL))
+          
+          if [ "$TOTAL_REMAINING" -gt 0 ]; then
+            echo "⚠️ WARNING: $TOTAL_REMAINING Pages deployments still exist for this PR"
+            echo "Breakdown: Pattern1=$REMAINING_PATTERN1, Pattern2=$REMAINING_PATTERN2, Pattern3=$REMAINING_PATTERN3, URL=$REMAINING_URL"
           else
             echo "✅ All Pages deployments successfully deleted"
           fi
 
-          echo "Checking Pages preview URL reachability..."
-          PREVIEW_URL="https://pr-$PR_NUMBER.raidhack-web.pages.dev"
-          PSTATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL" || echo "000")
-          echo "Pages preview HTTP status: $PSTATUS"
-          if [ "$PSTATUS" = "404" ] || [ "$PSTATUS" = "530" ] || [ "$PSTATUS" = "000" ]; then
-            echo "✅ Pages preview appears deleted or unreachable"
+          # Enhanced Pages preview URL testing
+          echo "Testing multiple preview URL patterns..."
+          PREVIEW_URLS=(
+            "https://pr-$PR_NUMBER.raidhack-web.pages.dev"
+            "https://pr-$PR_NUMBER.raidhack-web.pages.dev/"
+            "https://pr-$PR_NUMBER--raidhack-web.pages.dev"
+          )
+          
+          ALL_DELETED=true
+          for url in "${PREVIEW_URLS[@]}"; do
+            echo "Testing: $url"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$url" --max-time 10 || echo "000")
+            echo "Status: $STATUS"
+            if [ "$STATUS" = "404" ] || [ "$STATUS" = "530" ] || [ "$STATUS" = "000" ] || [ "$STATUS" = "522" ]; then
+              echo "✅ URL appears deleted or unreachable"
+            else
+              echo "⚠️ WARNING: URL may still be reachable ($STATUS)"
+              ALL_DELETED=false
+            fi
+          done
+          
+          if [ "$ALL_DELETED" = true ]; then
+            echo "✅ All preview URLs appear deleted"
           else
-            echo "⚠️ WARNING: Pages preview may still be reachable ($PSTATUS)"
+            echo "⚠️ Some preview URLs may still be accessible"
           fi
+          
+          # Final summary
+          echo "=== Cleanup Summary ==="
+          echo "Worker Status: $([ "$WORKER_STATUS" = "404" ] || [ "$WORKER_STATUS" = "000" ] || [ "$WORKER_STATUS" = "522" ] && echo "✅ Deleted" || echo "⚠️ May exist")"
+          echo "Pages Deployments: $([ "$TOTAL_REMAINING" -eq 0 ] && echo "✅ All deleted" || echo "⚠️ $TOTAL_REMAINING remaining")"
+          echo "Preview URLs: $([ "$ALL_DELETED" = true ] && echo "✅ All deleted" || echo "⚠️ Some accessible")"
           echo "=== Cleanup Verification Complete ==="
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -166,7 +262,7 @@ jobs:
         with:
           script: |
             const prNumber = ${{ github.event.number }};
-            const comment = `## 🧹 PR環境クリーンアップ実行完了\n\nこのPR (#${prNumber}) の専用環境のクリーンアップが実行されました：\n\n- **Worker API**: \`raidhack-api-pr-${prNumber}\`\n- **Pages Branch**: \`pr-${prNumber}\`\n\nクリーンアップの詳細は[Actions実行ログ](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})で確認できます。\n\n> **Note**: リソースの削除には数分かかる場合があります。完全に削除されない場合は手動での確認をお願いします。`;
+            const comment = `## 🧹 PR環境クリーンアップ実行完了\n\nこのPR (#${prNumber}) の専用環境のクリーンアップが実行されました;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
