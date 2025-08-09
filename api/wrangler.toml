@@ -6,6 +6,7 @@ compatibility_date = "2024-01-15"
 vars = { ENVIRONMENT = "development", JWT_SECRET = "dev-secret-key-for-testing" }
 
 [env.production]
+name = "raidhack-api"
 vars = { ENVIRONMENT = "production" }
 
 # データベース設定
