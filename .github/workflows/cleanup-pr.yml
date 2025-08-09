@@ -21,31 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Cleanup PR Environment
     steps:
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
-      - name: Get PR number
-        id: pr
-        run: |
-          echo "=== PR Number Debug Information ==="
-          echo "Event name: ${{ github.event_name }}"
-          echo "Event action: ${{ github.event.action }}"
-          echo "PR number from event: ${{ github.event.number }}"
-          echo "PR state: ${{ github.event.pull_request.state }}"
-          echo "PR merged: ${{ github.event.pull_request.merged }}"
-          echo "Base branch: ${{ github.event.pull_request.base.ref }}"
-          echo "Head branch: ${{ github.event.pull_request.head.ref }}"
-          echo "=== End Debug Information ==="
-          
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "number=${{ github.event.number }}" >> $GITHUB_OUTPUT
-            echo "Using PR number from event: ${{ github.event.number }}"
-          else
-            echo "number=${{ github.event.inputs.pr_number }}" >> $GITHUB_OUTPUT
-            echo "Using manual input PR number: ${{ github.event.inputs.pr_number }}"
-          fi
->>>>>>> Stashed changes
-=======
       - name: Get PR number
         id: pr
         run: |
@@ -54,7 +29,6 @@ jobs:
           else
             echo "number=${{ github.event.inputs.pr_number }}" >> $GITHUB_OUTPUT
           fi
->>>>>>> eab14cc12ca688428f63f3fdb1686ca522662abf
       - name: Checkout
         uses: actions/checkout@v4
 
