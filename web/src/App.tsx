@@ -11,6 +11,7 @@ import ProjectPage from './pages/ProjectPage'
 
 import { AuthProvider } from './features/auth'
 import Navigation from './components/Navigation'
+import { ProjectList } from './features/workspace'
 
 function App() {
   return (
@@ -18,7 +19,8 @@ function App() {
       <Router>
         <div className="flex">
           <Navigation />
-          <div className="flex-1 ml-20">
+          <ProjectList />
+          <div className="flex-1" style={{ marginLeft: '400px' }}>
             <Routes>
               <Route path="/" element={<IndexPage />} />
               <Route path="/test-api" element={<TestApiPage />} />
