@@ -66,8 +66,10 @@ jobs:
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
   deploy-web:
     runs-on: ubuntu-latest

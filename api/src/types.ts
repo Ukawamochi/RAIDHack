@@ -1,3 +1,5 @@
+/// <reference types="../worker-configuration" />
+
 // ====================
 // Environment & Context Types
 // ====================
@@ -104,7 +106,7 @@ export interface IdeasResponse {
     page: number;
     limit: number;
     total: number;
-    pages: number;
+    totalPages: number;
   };
 }
 
@@ -203,6 +205,27 @@ export interface CreateWorkRequest {
   demo_url?: string;
   repository_url?: string;
   technologies: string[];
+}
+
+// ====================
+// Work Response Types
+// ====================
+export interface WorksResponse {
+  success: true;
+  message?: string;
+  works: WorkWithTeam[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface WorkResponse {
+  success: true;
+  message?: string;
+  work: WorkWithTeam;
 }
 
 // ====================

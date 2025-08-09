@@ -351,9 +351,9 @@ authRoutes.post('/register', async (c) => {
       username,
       bio: bio || undefined,
       skills: skills || [],
-      avatarUrl: undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      avatar_url: undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     const response: AuthResponse = {
@@ -428,15 +428,23 @@ authRoutes.post('/login', async (c) => {
     );
 
     // レスポンス用ユーザー情報
+    let skills: string[] = [];
+    try {
+      skills = user.skills ? JSON.parse(user.skills as string) : [];
+    } catch (error) {
+      console.warn('Failed to parse skills JSON:', user.skills, error);
+      skills = [];
+    }
+
     const userData: User = {
       id: user.id as number,
       email: user.email as string,
       username: user.username as string,
       bio: (user.bio as string) || undefined,
-      skills: user.skills ? JSON.parse(user.skills as string) : [],
-      avatarUrl: (user.avatar_url as string) || undefined,
-      createdAt: user.created_at as string,
-      updatedAt: user.updated_at as string
+      skills: skills,
+      avatar_url: (user.avatar_url as string) || undefined,
+      created_at: user.created_at as string,
+      updated_at: user.updated_at as string
     };
 
     const response: AuthResponse = {
@@ -472,7 +480,7 @@ authRoutes.get('/me', authMiddleware, async (c) => {
       return c.json(errorResponse, 401);
     }
 
-    const response: AuthResponse = {
+    const response = {
       success: true,
       message: "ユーザー情報を取得しました",
       user,
@@ -571,12 +579,12 @@ authRoutes.put('/profile', authMiddleware, async (c) => {
       username: updatedUser.username as string,
       bio: (updatedUser.bio as string) || undefined,
       skills: updatedUser.skills ? JSON.parse(updatedUser.skills as string) : [],
-      avatarUrl: (updatedUser.avatar_url as string) || undefined,
-      createdAt: updatedUser.created_at as string,
-      updatedAt: updatedUser.updated_at as string
+      avatar_url: (updatedUser.avatar_url as string) || undefined,
+      created_at: updatedUser.created_at as string,
+      updated_at: updatedUser.updated_at as string
     };
 
-    const response: AuthResponse = {
+    const response = {
       success: true,
       message: "プロフィールを更新しました",
       user: userData,

@@ -52,9 +52,9 @@ export const authMiddleware = async (c: Context<AppContext>, next: Next) => {
       username: user.username as string,
       bio: (user.bio as string) || undefined,
       skills: user.skills ? JSON.parse(user.skills as string) : [],
-      avatarUrl: (user.avatar_url as string) || undefined,
-      createdAt: user.created_at as string,
-      updatedAt: user.updated_at as string
+      avatar_url: (user.avatar_url as string) || undefined,
+      created_at: user.created_at as string,
+      updated_at: user.updated_at as string
     } as User);
     
     c.set('userId', user.id as number);
@@ -92,9 +92,9 @@ export const optionalAuthMiddleware = async (c: Context<AppContext>, next: Next)
             username: user.username as string,
             bio: (user.bio as string) || undefined,
             skills: user.skills ? JSON.parse(user.skills as string) : [],
-            avatarUrl: (user.avatar_url as string) || undefined,
-            createdAt: user.created_at as string,
-            updatedAt: user.updated_at as string
+            avatar_url: (user.avatar_url as string) || undefined,
+            created_at: user.created_at as string,
+            updated_at: user.updated_at as string
           } as User);
           
           c.set('userId', user.id as number);

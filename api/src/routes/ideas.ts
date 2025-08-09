@@ -45,22 +45,30 @@ ideaRoutes.get('/', optionalAuthMiddleware, async (c) => {
       LIMIT ? OFFSET ?
     `).bind(...(userId ? [userId, limit, offset] : [limit, offset])).all();
 
-    const ideaList: Idea[] = ideas.results.map((idea: any) => ({
-      id: idea.id as number,
-      title: idea.title as string,
-      description: idea.description as string,
-      requiredSkills: idea.required_skills ? JSON.parse(idea.required_skills as string) : [],
-      status: idea.status as 'open' | 'development' | 'completed',
-      createdAt: idea.created_at as string,
-      updatedAt: idea.updated_at as string,
-      user: {
-        id: idea.user_id as number,
+    const ideaList: Idea[] = ideas.results.map((idea: any) => {
+      let requiredSkills: string[] = [];
+      try {
+        requiredSkills = idea.required_skills ? JSON.parse(idea.required_skills as string) : [];
+      } catch (error) {
+        console.warn('Failed to parse required_skills JSON:', idea.required_skills, error);
+        requiredSkills = [];
+      }
+
+      return {
+        id: idea.id as number,
+        title: idea.title as string,
+        description: idea.description as string,
+        required_skills: requiredSkills,
+        user_id: idea.user_id as number,
+        status: idea.status as 'open' | 'development' | 'completed',
+        created_at: idea.created_at as string,
+        updated_at: idea.updated_at as string,
         username: idea.username as string,
-        avatarUrl: idea.avatar_url || undefined
-      },
-      likeCount: idea.like_count as number,
-      userLiked: userId ? Boolean(idea.user_liked) : false
-    }));
+        avatar_url: idea.avatar_url || undefined,
+        like_count: idea.like_count as number,
+        user_liked: userId ? Boolean(idea.user_liked) : false
+      };
+    });
 
     const response: IdeasResponse = {
       success: true,
@@ -132,10 +140,11 @@ ideaRoutes.get('/:id', optionalAuthMiddleware, async (c) => {
       id: ideaData.id as number,
       title: ideaData.title as string,
       description: ideaData.description as string,
-      requiredSkills: ideaData.required_skills ? JSON.parse(ideaData.required_skills as string) : [],
+      required_skills: ideaData.required_skills ? JSON.parse(ideaData.required_skills as string) : [],
+      user_id: ideaData.user_id as number,
       status: ideaData.status as 'open' | 'development' | 'completed',
-      createdAt: ideaData.created_at as string,
-      updatedAt: ideaData.updated_at as string,
+      created_at: ideaData.created_at as string,
+      updated_at: ideaData.updated_at as string,
       user: {
         id: ideaData.user_id as number,
         email: ideaData.email as string,
@@ -170,7 +179,7 @@ ideaRoutes.get('/:id', optionalAuthMiddleware, async (c) => {
 ideaRoutes.post('/', authMiddleware, async (c) => {
   try {
     const body = await c.req.json() as CreateIdeaRequest;
-    const { title, description, requiredSkills } = body;
+    const { title, description, required_skills } = body;
     const user = c.get('user') as User;
 
     // バリデーション
@@ -184,7 +193,7 @@ ideaRoutes.post('/', authMiddleware, async (c) => {
     }
 
     // アイデア作成
-    const skillsJson = requiredSkills ? JSON.stringify(requiredSkills) : null;
+    const skillsJson = required_skills ? JSON.stringify(required_skills) : null;
     const result = await c.env.DB.prepare(
       `INSERT INTO ideas (title, description, required_skills, user_id, status) 
        VALUES (?, ?, ?, ?, 'open') RETURNING id, created_at, updated_at`
@@ -203,17 +212,11 @@ ideaRoutes.post('/', authMiddleware, async (c) => {
       id: result.id as number,
       title,
       description,
-      requiredSkills: requiredSkills || [],
+      required_skills: required_skills || [],
+      user_id: user.id,
       status: 'open' as const,
-      createdAt: result.created_at as string,
-      updatedAt: result.updated_at as string,
-      user: {
-        id: user.id,
-        username: user.username,
-        avatarUrl: user.avatarUrl
-      },
-      likeCount: 0,
-      userLiked: false
+      created_at: result.created_at as string,
+      updated_at: result.updated_at as string
     };
 
     const response: IdeaResponse = {
