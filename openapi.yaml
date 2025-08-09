@@ -6,7 +6,7 @@ info:
   version: 1.0.0
   contact:
     name: RAIDHack Platform
-    url: raidhack-web.pages.dev
+    url: https://raidhack-web.pages.dev
 
 servers:
   - url: https://raidhack-api.ukawamochi5.workers.dev
@@ -14,12 +14,12 @@ servers:
 
 paths:
   # ===== 認証関連 =====
-  /api/auth/register:
+  /api/auth/github/callback:
     post:
       tags:
         - Authentication
-      summary: ユーザー登録
-      description: 新しいユーザーアカウントを作成します
+      summary: GitHub OAuth認証
+      description: GitHubのOAuth認証コールバックを処理し、JWTトークンを取得します
       requestBody:
         required: true
         content:
@@ -27,35 +27,15 @@ paths:
             schema:
               type: object
               required:
-                - email
-                - username
-                - password
+                - code
               properties:
-                email:
+                code:
                   type: string
-                  format: email
-                  example: "user@example.com"
-                username:
-                  type: string
-                  minLength: 3
-                  maxLength: 30
-                  example: "developer_user"
-                password:
-                  type: string
-                  minLength: 8
-                  example: "securePassword123"
-                bio:
-                  type: string
-                  maxLength: 500
-                  example: "フロントエンド開発者です"
-                skills:
-                  type: array
-                  items:
-                    type: string
-                  example: ["React", "TypeScript", "CSS"]
+                  description: GitHubから取得した認証コード
+                  example: "abcdef123456"
       responses:
-        '201':
-          description: ユーザー登録成功
+        '200':
+          description: GitHub認証成功
           content:
             application/json:
               schema:
@@ -67,68 +47,32 @@ paths:
                         $ref: '#/components/schemas/User'
                       token:
                         type: string
+                        description: API認証用JWTトークン
                         example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      access_token:
+                        type: string
+                        description: GitHubアクセストークン
+                        example: "gho_abcdef123456..."
         '400':
           $ref: '#/components/responses/BadRequest'
-        '409':
-          description: ユーザーが既に存在
+        '500':
+          description: GitHub認証エラー
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/auth/login:
-    post:
-      tags:
-        - Authentication
-      summary: ログイン
-      description: ユーザー認証を行い、JWTトークンを取得します
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: "user@example.com"
-                password:
-                  type: string
-                  example: "securePassword123"
-      responses:
-        '200':
-          description: ログイン成功
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessResponse'
-                  - type: object
-                    properties:
-                      user:
-                        $ref: '#/components/schemas/User'
-                      token:
-                        type: string
-                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/auth/profile:
+  /api/auth/me:
     get:
       tags:
         - Authentication
-      summary: プロフィール取得
-      description: 認証済みユーザーのプロフィール情報を取得します
+      summary: 現在のユーザー情報取得
+      description: 認証済みユーザーの情報を取得します
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: プロフィール取得成功
+          description: ユーザー情報取得成功
           content:
             application/json:
               schema:
@@ -138,48 +82,6 @@ paths:
                     properties:
                       user:
                         $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-    put:
-      tags:
-        - Authentication
-      summary: プロフィール更新
-      description: 認証済みユーザーのプロフィール情報を更新します
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                  minLength: 3
-                  maxLength: 30
-                bio:
-                  type: string
-                  maxLength: 500
-                skills:
-                  type: array
-                  items:
-                    type: string
-      responses:
-        '200':
-          description: プロフィール更新成功
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessResponse'
-                  - type: object
-                    properties:
-                      user:
-                        $ref: '#/components/schemas/User'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -964,7 +866,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWTトークンをAuthorizationヘッダーに含めてください
+      description: GitHub OAuth認証で取得したJWTトークンをAuthorizationヘッダーに含めてください
 
   parameters:
     IdeaId:
@@ -1077,8 +979,8 @@ components:
         - id
         - email
         - username
-        - created_at
-        - updated_at
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: integer
@@ -1099,16 +1001,16 @@ components:
           items:
             type: string
           example: ["React", "TypeScript", "CSS"]
-        avatar_url:
+        avatarUrl:
           type: string
           format: uri
           nullable: true
           example: "https://example.com/avatar.jpg"
-        created_at:
+        createdAt:
           type: string
           format: date-time
           example: "2024-01-01T00:00:00.000Z"
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           example: "2024-01-01T00:00:00.000Z"
@@ -1471,7 +1373,7 @@ components:
 
 tags:
   - name: Authentication
-    description: ユーザー認証関連のAPI
+    description: GitHub OAuth認証関連のAPI
   - name: Ideas
     description: アイデア投稿・管理のAPI
   - name: Applications

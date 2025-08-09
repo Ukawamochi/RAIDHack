@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { ApiResponse } from '../../../types/api'
+import { useAuth } from '../../auth'
+import { systemApi } from '../../../lib/api'
 
 interface TestResult {
   success: boolean
@@ -7,37 +8,34 @@ interface TestResult {
   data?: Record<string, unknown>
 }
 
+type LoadingStatus = 'idle' | 'loading' | 'success' | 'error'
+
 function ApiTester() {
+  const [status, setStatus] = useState<LoadingStatus>('idle')
   const [result, setResult] = useState<TestResult | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const { isAuthenticated, user } = useAuth()
 
-  const testApi = async () => {
-    setIsLoading(true)
-    setResult({ success: false, message: 'APIに接続中...' })
-
-    const apiBase = import.meta.env.VITE_API_BASE || 'https://raidhack-api.ukawamochi5.workers.dev'
-    const endpoint = `${apiBase}/message`
+  const testHealthCheck = async () => {
+    setStatus('loading')
+    setResult(null)
 
     try {
-      const response = await fetch(endpoint)
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const data: ApiResponse = await response.json()
+      const response = await systemApi.healthGet()
       setResult({
         success: true,
-        message: data.message,
-        data: data.data
+        message: `サーバーステータス: ${response.data.status}`,
+        data: {
+          service: response.data.service,
+          timestamp: response.data.timestamp
+        }
       })
+      setStatus('success')
     } catch (error) {
       setResult({
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error'
       })
-    } finally {
-      setIsLoading(false)
+      setStatus('error')
     }
   }
 
@@ -48,22 +46,34 @@ function ApiTester() {
       margin: '50px auto',
       padding: '20px'
     }}>
-      <h1>RAIDHack Hello World CI/CD working!</h1>
+      <h1>RAIDHack API テスター</h1>
+      
+      {isAuthenticated && user && (
+        <div style={{ 
+          marginBottom: '20px', 
+          padding: '10px', 
+          backgroundColor: '#e8f5e8', 
+          borderRadius: '4px' 
+        }}>
+          <strong>認証済み:</strong> {user.username} ({user.email})
+        </div>
+      )}
       
       <button 
-        onClick={testApi}
-        disabled={isLoading}
+        onClick={testHealthCheck}
+        disabled={status === 'loading'}
         style={{
-          background: isLoading ? '#ccc' : '#666',
+          background: status === 'loading' ? '#ccc' : '#666',
           color: 'white',
           padding: '10px 20px',
           border: 'none',
-          cursor: isLoading ? 'not-allowed' : 'pointer',
+          cursor: status === 'loading' ? 'not-allowed' : 'pointer',
           borderRadius: '4px',
-          transition: 'all 0.2s'
+          transition: 'all 0.2s',
+          marginRight: '10px'
         }}
       >
-        {isLoading ? 'テスト中...' : 'APIをテスト'}
+        {status === 'loading' ? 'テスト中...' : 'ヘルスチェック'}
       </button>
       
       <div style={{
@@ -74,9 +84,17 @@ function ApiTester() {
         minHeight: '50px',
         backgroundColor: '#ffffff'
       }}>
-        {!result ? (
-          <span style={{ color: '#666' }}>ここに結果が表示されます</span>
-        ) : (
+        {status === 'idle' && (
+          <span style={{ color: '#666' }}>ボタンをクリックしてAPIをテストしてください</span>
+        )}
+        
+        {status === 'loading' && (
+          <div style={{ color: '#666' }}>
+            <span>🔄 API接続中...</span>
+          </div>
+        )}
+        
+        {(status === 'success' || status === 'error') && result && (
           <>
             <div style={{ 
               color: result.success ? '#28a745' : '#dc3545',
@@ -91,6 +109,18 @@ function ApiTester() {
             }}>
               {result.message}
             </div>
+            {result.data && (
+              <div style={{ 
+                fontSize: '12px',
+                color: '#666',
+                backgroundColor: '#f8f9fa',
+                padding: '8px',
+                borderRadius: '4px',
+                marginTop: '8px'
+              }}>
+                <pre>{JSON.stringify(result.data, null, 2)}</pre>
+              </div>
+            )}
           </>
         )}
       </div>

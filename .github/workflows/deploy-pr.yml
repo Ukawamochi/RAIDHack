@@ -84,9 +84,22 @@ jobs:
       - name: Build React app
         run: |
           cd web
+          # Generate dynamic environment variables for PR
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          fi
+          
+          PAGES_URL="https://pr-${PR_NUMBER}.raidhack-web.pages.dev"
+          
+          echo "VITE_API_BASE=${{ needs.deploy-api.outputs.api-url }}" >> .env.production
+          
+          echo "=== PR Build Configuration ==="
+          echo "API URL: ${{ needs.deploy-api.outputs.api-url }}"
+          echo "Pages URL: ${PAGES_URL}"
+          
           npm run build
-        env:
-          VITE_API_BASE: ${{ needs.deploy-api.outputs.api-url }}
 
       - name: Deploy to Cloudflare Pages (PR branch)
         id: deploy-pages
