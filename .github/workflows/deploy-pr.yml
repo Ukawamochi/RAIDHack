@@ -51,12 +51,6 @@ jobs:
           WORKER_NAME="raidhack-api-pr-$PR_NUMBER"
           API_URL="https://${WORKER_NAME}.ukawamochi5.workers.dev"
 
-          # Set GitHub OAuth secrets for PR environment
-          echo "Setting up GitHub OAuth secrets for PR environment..."
-          npx wrangler secret put JWT_SECRET <<< "${{ secrets.JWT_SECRET }}"
-          npx wrangler secret put GITHUB_CLIENT_ID <<< "${{ secrets.OAUTH_CLIENT_ID_DEV }}"
-          npx wrangler secret put GITHUB_CLIENT_SECRET <<< "${{ secrets.OAUTH_CLIENT_SECRET_DEV }}"
-
           echo "Deploying to: $API_URL"
           npx wrangler deploy --minify --name "$WORKER_NAME"
           echo "api-url=$API_URL" >> $GITHUB_OUTPUT
@@ -99,16 +93,11 @@ jobs:
           
           PAGES_URL="https://pr-${PR_NUMBER}.raidhack-web.pages.dev"
           
-          # Create .env.production for PR build
-          echo "# Auto-generated for PR build" > .env.production
           echo "VITE_API_BASE=${{ needs.deploy-api.outputs.api-url }}" >> .env.production
-          echo "VITE_GITHUB_CLIENT_ID=${{ secrets.OAUTH_CLIENT_ID_DEV }}" >> .env.production
-          echo "VITE_GITHUB_REDIRECT_URI=${PAGES_URL}/auth/callback" >> .env.production
           
           echo "=== PR Build Configuration ==="
           echo "API URL: ${{ needs.deploy-api.outputs.api-url }}"
           echo "Pages URL: ${PAGES_URL}"
-          echo "GitHub Client ID: (from GITHUB_CLIENT_ID_DEV)"
           
           npm run build
 
