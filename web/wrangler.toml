@@ -1,0 +1,6 @@
+name = "raidhack-web"
+compatibility_date = "2024-01-15"
+
+# Pages プロジェクト設定
+[env.production]
+name = "raidhack-web"
