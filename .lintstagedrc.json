@@ -1,8 +1,8 @@
 {
   "web/**/*.{js,jsx,ts,tsx}": [
-    "cd web && npm run lint"
+    "npm run lint --prefix web"
   ],
   "api/**/*.{js,ts}": [
-    "cd api && npx tsc --noEmit --skipLibCheck"
+    "npx tsc --noEmit --skipLibCheck --project api"
   ]
 }
