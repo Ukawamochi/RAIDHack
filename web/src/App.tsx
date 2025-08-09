@@ -12,7 +12,14 @@ function App() {
     <AuthProvider>
       <Router>
         <div>
-          <nav style={{ padding: '20px', borderBottom: '1px solid #ccc', marginBottom: '20px' }}>
+          <nav style={{ 
+            padding: '20px', 
+            borderBottom: '1px solid #ccc', 
+            marginBottom: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
             <Link to="/" style={{ marginRight: '20px', textDecoration: 'none', color: '#007bff' }}>
               Home
             </Link>
