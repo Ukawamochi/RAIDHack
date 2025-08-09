@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CreateIdeaPage.css';
 
-const API_BASE = import.meta.env.API_BASE || 'http://localhost:8787';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
 interface IdeaFormData {
   title: string;

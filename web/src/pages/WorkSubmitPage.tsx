@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import './WorkSubmitPage.css';
 
-const API_BASE = import.meta.env.API_BASE || 'http://localhost:8787';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
 interface Team {
   id: number;
