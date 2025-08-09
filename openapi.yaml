@@ -979,8 +979,8 @@ components:
         - id
         - email
         - username
-        - created_at
-        - updated_at
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: integer
@@ -1001,16 +1001,16 @@ components:
           items:
             type: string
           example: ["React", "TypeScript", "CSS"]
-        avatar_url:
+        avatarUrl:
           type: string
           format: uri
           nullable: true
           example: "https://example.com/avatar.jpg"
-        created_at:
+        createdAt:
           type: string
           format: date-time
           example: "2024-01-01T00:00:00.000Z"
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           example: "2024-01-01T00:00:00.000Z"

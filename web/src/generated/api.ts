@@ -1468,19 +1468,19 @@ export interface TeamDetailAllOfMembers {
      * @type {string}
      * @memberof TeamDetailAllOfMembers
      */
-    'avatar_url'?: string;
+    'avatarUrl'?: string;
     /**
      * 
      * @type {string}
      * @memberof TeamDetailAllOfMembers
      */
-    'created_at': string;
+    'createdAt': string;
     /**
      * 
      * @type {string}
      * @memberof TeamDetailAllOfMembers
      */
-    'updated_at': string;
+    'updatedAt': string;
     /**
      * 
      * @type {string}
@@ -1543,19 +1543,19 @@ export interface User {
      * @type {string}
      * @memberof User
      */
-    'avatar_url'?: string;
+    'avatarUrl'?: string;
     /**
      * 
      * @type {string}
      * @memberof User
      */
-    'created_at': string;
+    'createdAt': string;
     /**
      * 
      * @type {string}
      * @memberof User
      */
-    'updated_at': string;
+    'updatedAt': string;
 }
 /**
  * 

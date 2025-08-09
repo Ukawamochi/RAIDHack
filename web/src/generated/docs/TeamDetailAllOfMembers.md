@@ -10,9 +10,9 @@ Name | Type | Description | Notes
 **username** | **string** |  | [default to undefined]
 **bio** | **string** |  | [optional] [default to undefined]
 **skills** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
-**avatar_url** | **string** |  | [optional] [default to undefined]
-**created_at** | **string** |  | [default to undefined]
-**updated_at** | **string** |  | [default to undefined]
+**avatarUrl** | **string** |  | [optional] [default to undefined]
+**createdAt** | **string** |  | [default to undefined]
+**updatedAt** | **string** |  | [default to undefined]
 **role** | **string** |  | [optional] [default to undefined]
 **joined_at** | **string** |  | [optional] [default to undefined]
 
@@ -27,9 +27,9 @@ const instance: TeamDetailAllOfMembers = {
     username,
     bio,
     skills,
-    avatar_url,
-    created_at,
-    updated_at,
+    avatarUrl,
+    createdAt,
+    updatedAt,
     role,
     joined_at,
 };
