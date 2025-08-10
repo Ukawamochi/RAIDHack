@@ -508,6 +508,141 @@ export interface ApiNotificationsUnreadCountGet200Response {
 /**
  * 
  * @export
+ * @interface ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest
+ */
+export interface ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest
+     */
+    'action': ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequestActionEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest
+     */
+    'message'?: string;
+}
+
+export const ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequestActionEnum = {
+    Approve: 'approve',
+    Reject: 'reject'
+} as const;
+
+export type ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequestActionEnum = typeof ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequestActionEnum[keyof typeof ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequestActionEnum];
+
+/**
+ * 
+ * @export
+ * @interface ApiProjectsUserIdProjectIdGet200Response
+ */
+export interface ApiProjectsUserIdProjectIdGet200Response {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiProjectsUserIdProjectIdGet200Response
+     */
+    'success': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProjectsUserIdProjectIdGet200Response
+     */
+    'message': string;
+    /**
+     * 
+     * @type {ProjectDetail}
+     * @memberof ApiProjectsUserIdProjectIdGet200Response
+     */
+    'project'?: ProjectDetail;
+}
+/**
+ * 
+ * @export
+ * @interface ApiProjectsUserIdProjectIdMessagesGet200Response
+ */
+export interface ApiProjectsUserIdProjectIdMessagesGet200Response {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiProjectsUserIdProjectIdMessagesGet200Response
+     */
+    'success': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProjectsUserIdProjectIdMessagesGet200Response
+     */
+    'message': string;
+    /**
+     * 
+     * @type {Array<ProjectMessage>}
+     * @memberof ApiProjectsUserIdProjectIdMessagesGet200Response
+     */
+    'messages'?: Array<ProjectMessage>;
+}
+/**
+ * 
+ * @export
+ * @interface ApiProjectsUserIdProjectIdMessagesPost201Response
+ */
+export interface ApiProjectsUserIdProjectIdMessagesPost201Response {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiProjectsUserIdProjectIdMessagesPost201Response
+     */
+    'success': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProjectsUserIdProjectIdMessagesPost201Response
+     */
+    'message': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiProjectsUserIdProjectIdMessagesPost201Response
+     */
+    'messageId'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface ApiProjectsUserIdProjectIdMessagesPostRequest
+ */
+export interface ApiProjectsUserIdProjectIdMessagesPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProjectsUserIdProjectIdMessagesPostRequest
+     */
+    'message': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProjectsUserIdProjectIdMessagesPostRequest
+     */
+    'message_type'?: ApiProjectsUserIdProjectIdMessagesPostRequestMessageTypeEnum;
+    /**
+     * プライベートメッセージの受信者ID（message_type=privateの場合）
+     * @type {Array<number>}
+     * @memberof ApiProjectsUserIdProjectIdMessagesPostRequest
+     */
+    'recipients'?: Array<number>;
+}
+
+export const ApiProjectsUserIdProjectIdMessagesPostRequestMessageTypeEnum = {
+    Public: 'public',
+    Private: 'private'
+} as const;
+
+export type ApiProjectsUserIdProjectIdMessagesPostRequestMessageTypeEnum = typeof ApiProjectsUserIdProjectIdMessagesPostRequestMessageTypeEnum[keyof typeof ApiProjectsUserIdProjectIdMessagesPostRequestMessageTypeEnum];
+
+/**
+ * 
+ * @export
  * @interface ApiTeamsIdDiscordPut200Response
  */
 export interface ApiTeamsIdDiscordPut200Response {
@@ -1267,6 +1402,323 @@ export interface Pagination {
      * @memberof Pagination
      */
     'total_pages': number;
+}
+/**
+ * 
+ * @export
+ * @interface ProjectDetail
+ */
+export interface ProjectDetail {
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectDetail
+     */
+    'id': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'description': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'status': ProjectDetailStatusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectDetail
+     */
+    'hostId': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'hostName': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'githubUrl'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'demoUrl'?: string;
+    /**
+     * 
+     * @type {Array<ProjectDetailOtherLinksInner>}
+     * @memberof ProjectDetail
+     */
+    'otherLinks'?: Array<ProjectDetailOtherLinksInner>;
+    /**
+     * 
+     * @type {Array<ProjectDetailMembersInner>}
+     * @memberof ProjectDetail
+     */
+    'members': Array<ProjectDetailMembersInner>;
+    /**
+     * 
+     * @type {Array<ProjectDetailApplicantsInner>}
+     * @memberof ProjectDetail
+     */
+    'applicants': Array<ProjectDetailApplicantsInner>;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProjectDetail
+     */
+    'isRecruitingEnabled': boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectDetail
+     */
+    'maxMembers': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectDetail
+     */
+    'progressPercentage': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'startDate'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetail
+     */
+    'deadline'?: string;
+}
+
+export const ProjectDetailStatusEnum = {
+    Open: 'open',
+    Development: 'development',
+    Completed: 'completed'
+} as const;
+
+export type ProjectDetailStatusEnum = typeof ProjectDetailStatusEnum[keyof typeof ProjectDetailStatusEnum];
+
+/**
+ * 
+ * @export
+ * @interface ProjectDetailApplicantsInner
+ */
+export interface ProjectDetailApplicantsInner {
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectDetailApplicantsInner
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectDetailApplicantsInner
+     */
+    'userId'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailApplicantsInner
+     */
+    'username'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailApplicantsInner
+     */
+    'avatar'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailApplicantsInner
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailApplicantsInner
+     */
+    'motivation'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailApplicantsInner
+     */
+    'appliedAt'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ProjectDetailMembersInner
+ */
+export interface ProjectDetailMembersInner {
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectDetailMembersInner
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailMembersInner
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailMembersInner
+     */
+    'avatar'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailMembersInner
+     */
+    'role'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailMembersInner
+     */
+    'joinedAt'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ProjectDetailOtherLinksInner
+ */
+export interface ProjectDetailOtherLinksInner {
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailOtherLinksInner
+     */
+    'title'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectDetailOtherLinksInner
+     */
+    'url'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ProjectMessage
+ */
+export interface ProjectMessage {
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectMessage
+     */
+    'id': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectMessage
+     */
+    'userId': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectMessage
+     */
+    'userName': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectMessage
+     */
+    'message': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectMessage
+     */
+    'timestamp': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectMessage
+     */
+    'type': ProjectMessageTypeEnum;
+}
+
+export const ProjectMessageTypeEnum = {
+    Public: 'public',
+    Private: 'private'
+} as const;
+
+export type ProjectMessageTypeEnum = typeof ProjectMessageTypeEnum[keyof typeof ProjectMessageTypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface ProjectSettings
+ */
+export interface ProjectSettings {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProjectSettings
+     */
+    'is_recruiting'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectSettings
+     */
+    'github_url'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectSettings
+     */
+    'demo_url'?: string;
+    /**
+     * 
+     * @type {Array<ProjectDetailOtherLinksInner>}
+     * @memberof ProjectSettings
+     */
+    'other_links'?: Array<ProjectDetailOtherLinksInner>;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectSettings
+     */
+    'max_members'?: number;
 }
 /**
  * 
@@ -3212,6 +3664,507 @@ export class NotificationsApi extends BaseAPI {
     }
 }
 
+
+
+/**
+ * ProjectsApi - axios parameter creator
+ * @export
+ */
+export const ProjectsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * プロジェクトへの応募を承認または拒否します（プロジェクトオーナーのみ）
+         * @summary プロジェクト応募処理
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {number} applicationId 応募ID
+         * @param {ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest} apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdApplicationsApplicationIdPut: async (userId: string, projectId: string, applicationId: number, apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest: ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdApplicationsApplicationIdPut', 'userId', userId)
+            // verify required parameter 'projectId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdApplicationsApplicationIdPut', 'projectId', projectId)
+            // verify required parameter 'applicationId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdApplicationsApplicationIdPut', 'applicationId', applicationId)
+            // verify required parameter 'apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdApplicationsApplicationIdPut', 'apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest', apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest)
+            const localVarPath = `/api/projects/{userId}/{projectId}/applications/{applicationId}`
+                .replace(`{${"userId"}}`, encodeURIComponent(String(userId)))
+                .replace(`{${"projectId"}}`, encodeURIComponent(String(projectId)))
+                .replace(`{${"applicationId"}}`, encodeURIComponent(String(applicationId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 指定されたユーザーのプロジェクト詳細を取得します
+         * @summary プロジェクト詳細取得
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名（URL エンコードされた文字列）
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdGet: async (userId: string, projectId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdGet', 'userId', userId)
+            // verify required parameter 'projectId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdGet', 'projectId', projectId)
+            const localVarPath = `/api/projects/{userId}/{projectId}`
+                .replace(`{${"userId"}}`, encodeURIComponent(String(userId)))
+                .replace(`{${"projectId"}}`, encodeURIComponent(String(projectId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * プロジェクトのメッセージ一覧を取得します
+         * @summary プロジェクトメッセージ取得
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ApiProjectsUserIdProjectIdMessagesGetTypeEnum} [type] メッセージタイプ
+         * @param {number} [limit] 取得件数
+         * @param {number} [offset] オフセット
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdMessagesGet: async (userId: string, projectId: string, type?: ApiProjectsUserIdProjectIdMessagesGetTypeEnum, limit?: number, offset?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdMessagesGet', 'userId', userId)
+            // verify required parameter 'projectId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdMessagesGet', 'projectId', projectId)
+            const localVarPath = `/api/projects/{userId}/{projectId}/messages`
+                .replace(`{${"userId"}}`, encodeURIComponent(String(userId)))
+                .replace(`{${"projectId"}}`, encodeURIComponent(String(projectId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (type !== undefined) {
+                localVarQueryParameter['type'] = type;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * プロジェクトにメッセージを送信します
+         * @summary プロジェクトメッセージ送信
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ApiProjectsUserIdProjectIdMessagesPostRequest} apiProjectsUserIdProjectIdMessagesPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdMessagesPost: async (userId: string, projectId: string, apiProjectsUserIdProjectIdMessagesPostRequest: ApiProjectsUserIdProjectIdMessagesPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdMessagesPost', 'userId', userId)
+            // verify required parameter 'projectId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdMessagesPost', 'projectId', projectId)
+            // verify required parameter 'apiProjectsUserIdProjectIdMessagesPostRequest' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdMessagesPost', 'apiProjectsUserIdProjectIdMessagesPostRequest', apiProjectsUserIdProjectIdMessagesPostRequest)
+            const localVarPath = `/api/projects/{userId}/{projectId}/messages`
+                .replace(`{${"userId"}}`, encodeURIComponent(String(userId)))
+                .replace(`{${"projectId"}}`, encodeURIComponent(String(projectId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiProjectsUserIdProjectIdMessagesPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * プロジェクトの設定を更新します（プロジェクトオーナーのみ）
+         * @summary プロジェクト設定更新
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ProjectSettings} projectSettings 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdSettingsPut: async (userId: string, projectId: string, projectSettings: ProjectSettings, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdSettingsPut', 'userId', userId)
+            // verify required parameter 'projectId' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdSettingsPut', 'projectId', projectId)
+            // verify required parameter 'projectSettings' is not null or undefined
+            assertParamExists('apiProjectsUserIdProjectIdSettingsPut', 'projectSettings', projectSettings)
+            const localVarPath = `/api/projects/{userId}/{projectId}/settings`
+                .replace(`{${"userId"}}`, encodeURIComponent(String(userId)))
+                .replace(`{${"projectId"}}`, encodeURIComponent(String(projectId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(projectSettings, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ProjectsApi - functional programming interface
+ * @export
+ */
+export const ProjectsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ProjectsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * プロジェクトへの応募を承認または拒否します（プロジェクトオーナーのみ）
+         * @summary プロジェクト応募処理
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {number} applicationId 応募ID
+         * @param {ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest} apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectsUserIdProjectIdApplicationsApplicationIdPut(userId: string, projectId: string, applicationId: number, apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest: ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectsUserIdProjectIdApplicationsApplicationIdPut(userId, projectId, applicationId, apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.apiProjectsUserIdProjectIdApplicationsApplicationIdPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 指定されたユーザーのプロジェクト詳細を取得します
+         * @summary プロジェクト詳細取得
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名（URL エンコードされた文字列）
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectsUserIdProjectIdGet(userId: string, projectId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiProjectsUserIdProjectIdGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectsUserIdProjectIdGet(userId, projectId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.apiProjectsUserIdProjectIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * プロジェクトのメッセージ一覧を取得します
+         * @summary プロジェクトメッセージ取得
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ApiProjectsUserIdProjectIdMessagesGetTypeEnum} [type] メッセージタイプ
+         * @param {number} [limit] 取得件数
+         * @param {number} [offset] オフセット
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectsUserIdProjectIdMessagesGet(userId: string, projectId: string, type?: ApiProjectsUserIdProjectIdMessagesGetTypeEnum, limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiProjectsUserIdProjectIdMessagesGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectsUserIdProjectIdMessagesGet(userId, projectId, type, limit, offset, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.apiProjectsUserIdProjectIdMessagesGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * プロジェクトにメッセージを送信します
+         * @summary プロジェクトメッセージ送信
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ApiProjectsUserIdProjectIdMessagesPostRequest} apiProjectsUserIdProjectIdMessagesPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectsUserIdProjectIdMessagesPost(userId: string, projectId: string, apiProjectsUserIdProjectIdMessagesPostRequest: ApiProjectsUserIdProjectIdMessagesPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiProjectsUserIdProjectIdMessagesPost201Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectsUserIdProjectIdMessagesPost(userId, projectId, apiProjectsUserIdProjectIdMessagesPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.apiProjectsUserIdProjectIdMessagesPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * プロジェクトの設定を更新します（プロジェクトオーナーのみ）
+         * @summary プロジェクト設定更新
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ProjectSettings} projectSettings 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectsUserIdProjectIdSettingsPut(userId: string, projectId: string, projectSettings: ProjectSettings, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectsUserIdProjectIdSettingsPut(userId, projectId, projectSettings, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectsApi.apiProjectsUserIdProjectIdSettingsPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ProjectsApi - factory interface
+ * @export
+ */
+export const ProjectsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ProjectsApiFp(configuration)
+    return {
+        /**
+         * プロジェクトへの応募を承認または拒否します（プロジェクトオーナーのみ）
+         * @summary プロジェクト応募処理
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {number} applicationId 応募ID
+         * @param {ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest} apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdApplicationsApplicationIdPut(userId: string, projectId: string, applicationId: number, apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest: ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest, options?: RawAxiosRequestConfig): AxiosPromise<SuccessResponse> {
+            return localVarFp.apiProjectsUserIdProjectIdApplicationsApplicationIdPut(userId, projectId, applicationId, apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 指定されたユーザーのプロジェクト詳細を取得します
+         * @summary プロジェクト詳細取得
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名（URL エンコードされた文字列）
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdGet(userId: string, projectId: string, options?: RawAxiosRequestConfig): AxiosPromise<ApiProjectsUserIdProjectIdGet200Response> {
+            return localVarFp.apiProjectsUserIdProjectIdGet(userId, projectId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * プロジェクトのメッセージ一覧を取得します
+         * @summary プロジェクトメッセージ取得
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ApiProjectsUserIdProjectIdMessagesGetTypeEnum} [type] メッセージタイプ
+         * @param {number} [limit] 取得件数
+         * @param {number} [offset] オフセット
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdMessagesGet(userId: string, projectId: string, type?: ApiProjectsUserIdProjectIdMessagesGetTypeEnum, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<ApiProjectsUserIdProjectIdMessagesGet200Response> {
+            return localVarFp.apiProjectsUserIdProjectIdMessagesGet(userId, projectId, type, limit, offset, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * プロジェクトにメッセージを送信します
+         * @summary プロジェクトメッセージ送信
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ApiProjectsUserIdProjectIdMessagesPostRequest} apiProjectsUserIdProjectIdMessagesPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdMessagesPost(userId: string, projectId: string, apiProjectsUserIdProjectIdMessagesPostRequest: ApiProjectsUserIdProjectIdMessagesPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiProjectsUserIdProjectIdMessagesPost201Response> {
+            return localVarFp.apiProjectsUserIdProjectIdMessagesPost(userId, projectId, apiProjectsUserIdProjectIdMessagesPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * プロジェクトの設定を更新します（プロジェクトオーナーのみ）
+         * @summary プロジェクト設定更新
+         * @param {string} userId ユーザー名
+         * @param {string} projectId プロジェクト名
+         * @param {ProjectSettings} projectSettings 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectsUserIdProjectIdSettingsPut(userId: string, projectId: string, projectSettings: ProjectSettings, options?: RawAxiosRequestConfig): AxiosPromise<SuccessResponse> {
+            return localVarFp.apiProjectsUserIdProjectIdSettingsPut(userId, projectId, projectSettings, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ProjectsApi - object-oriented interface
+ * @export
+ * @class ProjectsApi
+ * @extends {BaseAPI}
+ */
+export class ProjectsApi extends BaseAPI {
+    /**
+     * プロジェクトへの応募を承認または拒否します（プロジェクトオーナーのみ）
+     * @summary プロジェクト応募処理
+     * @param {string} userId ユーザー名
+     * @param {string} projectId プロジェクト名
+     * @param {number} applicationId 応募ID
+     * @param {ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest} apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProjectsApi
+     */
+    public apiProjectsUserIdProjectIdApplicationsApplicationIdPut(userId: string, projectId: string, applicationId: number, apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest: ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest, options?: RawAxiosRequestConfig) {
+        return ProjectsApiFp(this.configuration).apiProjectsUserIdProjectIdApplicationsApplicationIdPut(userId, projectId, applicationId, apiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 指定されたユーザーのプロジェクト詳細を取得します
+     * @summary プロジェクト詳細取得
+     * @param {string} userId ユーザー名
+     * @param {string} projectId プロジェクト名（URL エンコードされた文字列）
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProjectsApi
+     */
+    public apiProjectsUserIdProjectIdGet(userId: string, projectId: string, options?: RawAxiosRequestConfig) {
+        return ProjectsApiFp(this.configuration).apiProjectsUserIdProjectIdGet(userId, projectId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * プロジェクトのメッセージ一覧を取得します
+     * @summary プロジェクトメッセージ取得
+     * @param {string} userId ユーザー名
+     * @param {string} projectId プロジェクト名
+     * @param {ApiProjectsUserIdProjectIdMessagesGetTypeEnum} [type] メッセージタイプ
+     * @param {number} [limit] 取得件数
+     * @param {number} [offset] オフセット
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProjectsApi
+     */
+    public apiProjectsUserIdProjectIdMessagesGet(userId: string, projectId: string, type?: ApiProjectsUserIdProjectIdMessagesGetTypeEnum, limit?: number, offset?: number, options?: RawAxiosRequestConfig) {
+        return ProjectsApiFp(this.configuration).apiProjectsUserIdProjectIdMessagesGet(userId, projectId, type, limit, offset, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * プロジェクトにメッセージを送信します
+     * @summary プロジェクトメッセージ送信
+     * @param {string} userId ユーザー名
+     * @param {string} projectId プロジェクト名
+     * @param {ApiProjectsUserIdProjectIdMessagesPostRequest} apiProjectsUserIdProjectIdMessagesPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProjectsApi
+     */
+    public apiProjectsUserIdProjectIdMessagesPost(userId: string, projectId: string, apiProjectsUserIdProjectIdMessagesPostRequest: ApiProjectsUserIdProjectIdMessagesPostRequest, options?: RawAxiosRequestConfig) {
+        return ProjectsApiFp(this.configuration).apiProjectsUserIdProjectIdMessagesPost(userId, projectId, apiProjectsUserIdProjectIdMessagesPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * プロジェクトの設定を更新します（プロジェクトオーナーのみ）
+     * @summary プロジェクト設定更新
+     * @param {string} userId ユーザー名
+     * @param {string} projectId プロジェクト名
+     * @param {ProjectSettings} projectSettings 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProjectsApi
+     */
+    public apiProjectsUserIdProjectIdSettingsPut(userId: string, projectId: string, projectSettings: ProjectSettings, options?: RawAxiosRequestConfig) {
+        return ProjectsApiFp(this.configuration).apiProjectsUserIdProjectIdSettingsPut(userId, projectId, projectSettings, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+/**
+ * @export
+ */
+export const ApiProjectsUserIdProjectIdMessagesGetTypeEnum = {
+    Public: 'public',
+    Private: 'private'
+} as const;
+export type ApiProjectsUserIdProjectIdMessagesGetTypeEnum = typeof ApiProjectsUserIdProjectIdMessagesGetTypeEnum[keyof typeof ApiProjectsUserIdProjectIdMessagesGetTypeEnum];
 
 
 /**

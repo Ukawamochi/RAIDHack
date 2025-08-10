@@ -1,0 +1,5 @@
+export { default as ProjectDashboard } from './ProjectDashboard'
+export { default as ProjectHeader } from './ProjectHeader'
+export { default as ProjectStatusCard } from './ProjectStatusCard'
+export { default as ProjectChat } from './ProjectChat'
+export { default as ProjectActions } from './ProjectActions'

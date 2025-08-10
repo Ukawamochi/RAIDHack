@@ -809,6 +809,260 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ===== プロジェクト関連 =====
+  /api/projects/{userId}/{projectId}:
+    get:
+      tags:
+        - Projects
+      summary: プロジェクト詳細取得
+      description: 指定されたユーザーのプロジェクト詳細を取得します
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザー名
+          schema:
+            type: string
+            example: "alice"
+        - name: projectId
+          in: path
+          required: true
+          description: プロジェクト名（URL エンコードされた文字列）
+          schema:
+            type: string
+            example: "my-awesome-project"
+      responses:
+        '200':
+          description: プロジェクト詳細取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      project:
+                        $ref: '#/components/schemas/ProjectDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/projects/{userId}/{projectId}/settings:
+    put:
+      tags:
+        - Projects
+      summary: プロジェクト設定更新
+      description: プロジェクトの設定を更新します（プロジェクトオーナーのみ）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザー名
+          schema:
+            type: string
+        - name: projectId
+          in: path
+          required: true
+          description: プロジェクト名
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectSettings'
+      responses:
+        '200':
+          description: プロジェクト設定更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/projects/{userId}/{projectId}/messages:
+    get:
+      tags:
+        - Projects
+      summary: プロジェクトメッセージ取得
+      description: プロジェクトのメッセージ一覧を取得します
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザー名
+          schema:
+            type: string
+        - name: projectId
+          in: path
+          required: true
+          description: プロジェクト名
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: メッセージタイプ
+          schema:
+            type: string
+            enum: [public, private]
+            default: public
+        - name: limit
+          in: query
+          description: 取得件数
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          description: オフセット
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: メッセージ取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags:
+        - Projects
+      summary: プロジェクトメッセージ送信
+      description: プロジェクトにメッセージを送信します
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザー名
+          schema:
+            type: string
+        - name: projectId
+          in: path
+          required: true
+          description: プロジェクト名
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  maxLength: 1000
+                  example: "プロジェクトの進捗はいかがですか？"
+                message_type:
+                  type: string
+                  enum: [public, private]
+                  default: public
+                recipients:
+                  type: array
+                  items:
+                    type: integer
+                  description: プライベートメッセージの受信者ID（message_type=privateの場合）
+      responses:
+        '201':
+          description: メッセージ送信成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      messageId:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/projects/{userId}/{projectId}/applications/{applicationId}:
+    put:
+      tags:
+        - Projects
+      summary: プロジェクト応募処理
+      description: プロジェクトへの応募を承認または拒否します（プロジェクトオーナーのみ）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザー名
+          schema:
+            type: string
+        - name: projectId
+          in: path
+          required: true
+          description: プロジェクト名
+          schema:
+            type: string
+        - name: applicationId
+          in: path
+          required: true
+          description: 応募ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                  example: "approve"
+                message:
+                  type: string
+                  maxLength: 500
+                  example: "承認いたします。よろしくお願いします！"
+      responses:
+        '200':
+          description: 応募処理成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   # ===== 管理者機能 =====
   /api/admin/stats:
     get:
@@ -1371,11 +1625,220 @@ components:
           type: integer
           example: 5
 
+    # プロジェクト関連のスキーマ
+    ProjectDetail:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - status
+        - hostId
+        - hostName
+        - members
+        - applicants
+        - isRecruitingEnabled
+        - maxMembers
+        - progressPercentage
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "チャットボット開発プロジェクト"
+        description:
+          type: string
+          example: "AIを活用したチャットボットの開発プロジェクトです"
+        status:
+          type: string
+          enum: [open, development, completed]
+          example: "development"
+        hostId:
+          type: integer
+          example: 1
+        hostName:
+          type: string
+          example: "project_host"
+        githubUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://github.com/team/chatbot"
+        demoUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://chatbot-demo.example.com"
+        otherLinks:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                example: "デザイン資料"
+              url:
+                type: string
+                format: uri
+                example: "https://figma.com/design/abc"
+        members:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 2
+              name:
+                type: string
+                example: "developer1"
+              avatar:
+                type: string
+                format: uri
+                nullable: true
+                example: "https://avatars.githubusercontent.com/u/123"
+              role:
+                type: string
+                example: "developer"
+              joinedAt:
+                type: string
+                format: date-time
+                example: "2024-01-15T10:30:00Z"
+        applicants:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 3
+              userId:
+                type: integer
+                example: 4
+              username:
+                type: string
+                example: "applicant1"
+              avatar:
+                type: string
+                format: uri
+                nullable: true
+              message:
+                type: string
+                nullable: true
+                example: "参加したいです！"
+              motivation:
+                type: string
+                nullable: true
+                example: "このプロジェクトに興味があります"
+              appliedAt:
+                type: string
+                format: date-time
+                example: "2024-01-20T14:00:00Z"
+        isRecruitingEnabled:
+          type: boolean
+          example: true
+        maxMembers:
+          type: integer
+          example: 5
+        progressPercentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 30
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-20T15:30:00Z"
+        startDate:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-01-10T00:00:00Z"
+        deadline:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-03-01T23:59:59Z"
+
+    ProjectSettings:
+      type: object
+      properties:
+        is_recruiting:
+          type: boolean
+          example: true
+        github_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://github.com/team/project"
+        demo_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://project-demo.example.com"
+        other_links:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                example: "デザイン資料"
+              url:
+                type: string
+                format: uri
+                example: "https://figma.com/design/abc"
+        max_members:
+          type: integer
+          minimum: 1
+          maximum: 20
+          example: 5
+
+    ProjectMessage:
+      type: object
+      required:
+        - id
+        - userId
+        - userName
+        - message
+        - timestamp
+        - type
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 2
+        userName:
+          type: string
+          example: "developer1"
+        message:
+          type: string
+          example: "プロジェクトの進捗はいかがですか？"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-20T10:30:00Z"
+        type:
+          type: string
+          enum: [public, private]
+          example: "public"
+
 tags:
   - name: Authentication
     description: GitHub OAuth認証関連のAPI
   - name: Ideas
     description: アイデア投稿・管理のAPI
+  - name: Projects
+    description: プロジェクト管理のAPI
   - name: Applications
     description: アイデアへの応募管理のAPI
   - name: Teams

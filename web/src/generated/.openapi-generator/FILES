@@ -23,6 +23,11 @@ docs/ApiIdeasPost201Response.md
 docs/ApiIdeasPostRequest.md
 docs/ApiNotificationsGet200Response.md
 docs/ApiNotificationsUnreadCountGet200Response.md
+docs/ApiProjectsUserIdProjectIdApplicationsApplicationIdPutRequest.md
+docs/ApiProjectsUserIdProjectIdGet200Response.md
+docs/ApiProjectsUserIdProjectIdMessagesGet200Response.md
+docs/ApiProjectsUserIdProjectIdMessagesPost201Response.md
+docs/ApiProjectsUserIdProjectIdMessagesPostRequest.md
 docs/ApiTeamsIdDiscordPut200Response.md
 docs/ApiTeamsIdDiscordPutRequest.md
 docs/ApiTeamsIdGet200Response.md
@@ -46,6 +51,13 @@ docs/IdeasApi.md
 docs/Notification.md
 docs/NotificationsApi.md
 docs/Pagination.md
+docs/ProjectDetail.md
+docs/ProjectDetailApplicantsInner.md
+docs/ProjectDetailMembersInner.md
+docs/ProjectDetailOtherLinksInner.md
+docs/ProjectMessage.md
+docs/ProjectSettings.md
+docs/ProjectsApi.md
 docs/SuccessResponse.md
 docs/SystemApi.md
 docs/Team.md

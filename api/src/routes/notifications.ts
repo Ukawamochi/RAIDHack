@@ -149,6 +149,32 @@ notificationsRoutes.put('/mark-all-read', authMiddleware, async (c) => {
   }
 });
 
+// OpenAPI に合わせたエイリアス（/api/notifications/read-all）
+notificationsRoutes.put('/read-all', authMiddleware, async (c) => {
+  try {
+    const user = c.get('user') as User;
+
+    await c.env.DB.prepare(`
+      UPDATE notifications 
+      SET is_read = 1 
+      WHERE user_id = ? AND is_read = 0
+    `).bind(user.id).run();
+
+    return c.json({
+      success: true,
+      message: "全ての通知を既読にしました"
+    });
+
+  } catch (error) {
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "通知の更新に失敗しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});
+
 // 通知削除
 notificationsRoutes.delete('/:id', authMiddleware, async (c) => {
   try {

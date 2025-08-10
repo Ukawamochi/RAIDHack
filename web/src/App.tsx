@@ -41,6 +41,7 @@ function AppContent() {
             <Route path="/notifications" element={<NotificationPage />} />
             <Route path="/:username" element={<UserPage />} />
             <Route path="/:username/:project" element={<ProjectPage />} />
+            <Route path="/project/:projectId" element={<ProjectPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

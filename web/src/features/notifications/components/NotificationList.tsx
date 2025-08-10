@@ -1,84 +1,106 @@
-import { useState, useEffect } from 'react'
-import { Notification } from '../contexts/NotificationContext'
+import { useState, useEffect, useCallback } from 'react'
+import { notificationsApi, ideasApi } from '../../../lib/api'
+import type { Notification as ApiNotification } from '../../../generated'
 
-interface NotificationHistoryItem extends Notification {
+type UiNotification = {
+  id: number
+  type: 'application' | 'team_invite' | 'application_status' | 'new_idea' | 'vote' | 'system'
+  title: string
+  message: string
+  createdAt: Date
   isRead: boolean
+  raw: ApiNotification
 }
 
 const NotificationList = () => {
-  const [notifications, setNotifications] = useState<NotificationHistoryItem[]>([])
+  const [notifications, setNotifications] = useState<UiNotification[]>([])
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [actingId, setActingId] = useState<number | null>(null)
 
-  useEffect(() => {
-    // LocalStorageから通知履歴を読み込み
-    const savedNotifications = localStorage.getItem('notificationHistory')
-    if (savedNotifications) {
-      try {
-        const parsedNotifications = JSON.parse(savedNotifications)
-        setNotifications(parsedNotifications)
-      } catch (error) {
-        console.error('通知履歴の読み込みに失敗しました:', error)
-      }
-    } else {
-      // 初回ロード時のサンプルデータ
-      const sampleNotifications: NotificationHistoryItem[] = [
-        {
-          id: '1',
-          type: 'info',
-          title: 'プロジェクトに参加要望があります',
-          message: 'ユーザー「田中太郎」さんがあなたのプロジェクト「ECサイト構築」への参加を希望しています',
-          createdAt: new Date(Date.now() - 3600000), // 1時間前
-          isRead: false
-        },
-        {
-          id: '2',
-          type: 'success',
-          title: 'ダイレクトメッセージ',
-          message: '佐藤花子さんからメッセージが届いています',
-          createdAt: new Date(Date.now() - 7200000), // 2時間前
-          isRead: false
-        },
-        {
-          id: '3',
-          type: 'info',
-          title: '下書きを保存しました',
-          message: '入力内容が保存されました',
-          createdAt: new Date(Date.now() - 86400000), // 1日前
-          isRead: true
-        }
-      ]
-      setNotifications(sampleNotifications)
+  const fetchNotifications = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await notificationsApi.apiNotificationsGet()
+      const list = res.data.notifications || []
+      const mapped: UiNotification[] = list.map(n => ({
+        id: n.id,
+        type: n.type as UiNotification['type'],
+        title: n.title,
+        message: n.message,
+        createdAt: new Date(n.created_at),
+        isRead: !!n.is_read,
+        raw: n
+      }))
+      setNotifications(mapped)
+    } catch (e: any) {
+      setError(e?.message || '通知の取得に失敗しました')
+    } finally {
+      setLoading(false)
     }
   }, [])
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    )
+  useEffect(() => {
+    fetchNotifications()
+  }, [fetchNotifications])
+
+  const markAsRead = async (id: number) => {
+    try {
+      await notificationsApi.apiNotificationsIdReadPut(id)
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+    } catch (e) {
+      console.error(e)
+    }
   }
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, isRead: true }))
-    )
+  const markAllAsRead = async () => {
+    try {
+      await notificationsApi.apiNotificationsReadAllPut()
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+    } catch (e) {
+      console.error(e)
+    }
   }
 
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id))
+  const deleteNotification = async (id: number) => {
+    try {
+      await notificationsApi.apiNotificationsIdDelete(id)
+      setNotifications(prev => prev.filter(n => n.id !== id))
+    } catch (e) {
+      console.error(e)
+    }
   }
 
-  const clearAll = () => {
+  const clearAll = async () => {
+    // まとめて削除APIが無いので、フロント側で全削除
+    const ids = notifications.map(n => n.id)
+    for (const id of ids) {
+      try { await notificationsApi.apiNotificationsIdDelete(id) } catch {}
+    }
     setNotifications([])
   }
 
-  // LocalStorageに保存
-  useEffect(() => {
-    localStorage.setItem('notificationHistory', JSON.stringify(notifications))
-  }, [notifications])
+  const approveApplication = async (n: UiNotification) => {
+    try {
+      setActingId(n.id)
+      const data: any = (n.raw as any).data
+      const ideaId = Number(data?.ideaId)
+      const applicationId = Number(data?.applicationId)
+      if (!ideaId || !applicationId) {
+        throw new Error('通知データに必要な情報がありません')
+      }
+      await ideasApi.apiIdeasIdApplicationsApplicationIdPut(ideaId, applicationId, { action: 'approve' })
+      await notificationsApi.apiNotificationsIdReadPut(n.id)
+      setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, isRead: true } : item))
+    } catch (e: any) {
+      console.error(e)
+      setError(e?.message || '承認に失敗しました')
+    } finally {
+      setActingId(null)
+    }
+  }
 
   const filteredNotifications = filter === 'all' 
     ? notifications 
@@ -168,7 +190,15 @@ const NotificationList = () => {
 
       {/* 通知一覧 */}
       <div className="space-y-4">
-        {filteredNotifications.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12 text-gray-500">
+            <p>読み込み中...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 text-red-500">
+            <p>{error}</p>
+          </div>
+        ) : filteredNotifications.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p>{filter === 'unread' ? '未読の通知はありません' : '通知がありません'}</p>
           </div>
@@ -201,7 +231,7 @@ const NotificationList = () => {
                   {notification.message && (
                     <p className="text-gray-600 mt-1">{notification.message}</p>
                   )}
-                  <div className="flex space-x-4 mt-3">
+                   <div className="flex space-x-4 mt-3">
                     {!notification.isRead && (
                       <button
                         onClick={() => markAsRead(notification.id)}
@@ -210,6 +240,15 @@ const NotificationList = () => {
                         既読にする
                       </button>
                     )}
+                     {!notification.isRead && notification.type === 'application' && (
+                       <button
+                         onClick={() => approveApplication(notification)}
+                         disabled={actingId === notification.id}
+                         className={`text-sm ${actingId === notification.id ? 'text-gray-400' : 'text-green-600 hover:text-green-800'}`}
+                       >
+                         {actingId === notification.id ? '処理中…' : '許可'}
+                       </button>
+                     )}
                     <button
                       onClick={() => deleteNotification(notification.id)}
                       className="text-sm text-red-600 hover:text-red-800"
