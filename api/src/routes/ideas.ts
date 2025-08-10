@@ -13,6 +13,7 @@ import {
   User 
 } from "../types";
 import { authMiddleware, optionalAuthMiddleware } from "../middleware/auth";
+import { createNotification } from "./notifications";
 
 export const ideaRoutes = new Hono<AppContext>();
 
@@ -403,11 +404,31 @@ ideaRoutes.post('/:id/apply', authMiddleware, async (c) => {
       VALUES (?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
     `).bind(ideaId, userId, message || '', motivation || '').run();
 
+    const applicationId = applicationResult.meta.last_row_id as number;
+
+    // 参加申請通知をプロジェクトホストへ送信
+    try {
+      const applicant = await c.env.DB.prepare(
+        "SELECT username FROM users WHERE id = ?"
+      ).bind(userId).first();
+
+      await createNotification(
+        c.env.DB,
+        Number(idea.user_id),
+        'application',
+        '新しい参加申請',
+        `「${String(idea.title)}」に${applicant?.username || 'ユーザー'}さんから参加申請が届きました。`,
+        { ideaId, applicationId, applicantId: userId }
+      );
+    } catch (e) {
+      console.warn('Failed to notify host for application:', e);
+    }
+
     return c.json({
       success: true,
       message: "応募を送信しました",
       application: {
-        id: applicationResult.meta.last_row_id,
+        id: applicationId,
         idea_id: ideaId,
         status: 'pending'
       }
@@ -581,6 +602,66 @@ ideaRoutes.put('/:id/applications/:applicationId', authMiddleware, async (c) => 
       SET status = ?, reviewed_at = CURRENT_TIMESTAMP, review_message = ?
       WHERE id = ?
     `).bind(newStatus, message || '', applicationId).run();
+
+    // 申請者IDなど詳細を取得
+  const appDetail: any = await c.env.DB.prepare(
+      `SELECT a.applicant_id, i.title, i.user_id as owner_id
+       FROM applications a JOIN ideas i ON a.idea_id = i.id
+       WHERE a.id = ?`
+    ).bind(applicationId).first();
+
+    // 承認時: チーム作成/メンバー追加 + 応募者へ承認通知
+    if (action === 'approve' && appDetail) {
+      // 既存チーム確認
+      const existingTeam: any = await c.env.DB.prepare(
+        "SELECT id FROM teams WHERE idea_id = ?"
+      ).bind(ideaId).first();
+
+      let teamId: number;
+      if (existingTeam && existingTeam.id) {
+        teamId = Number(existingTeam.id);
+      } else {
+        const teamResult = await c.env.DB.prepare(`
+          INSERT INTO teams (idea_id, name, description, status)
+          VALUES (?, ?, '', 'active')
+        `).bind(ideaId, `${String(appDetail.title)} チーム`).run();
+        teamId = Number(teamResult.meta.last_row_id);
+      }
+
+      // メンバー追加（重複Uniqueは無視される想定）
+  await c.env.DB.prepare(`
+        INSERT OR IGNORE INTO team_members (team_id, user_id, role)
+        VALUES (?, ?, 'member')
+  `).bind(teamId, Number(appDetail.applicant_id)).run();
+
+      // 活動ログ
+      await c.env.DB.prepare(`
+        INSERT INTO project_activities (project_id, activity_type, description, created_by)
+        VALUES (?, 'member_join', ?, ?)
+      `).bind(ideaId, `メンバーが参加しました`, userId).run();
+
+      // 応募者へ承認通知
+      await createNotification(
+        c.env.DB,
+        Number(appDetail.applicant_id),
+        'application_status',
+        '応募が承認されました',
+        `あなたの「${String(appDetail.title)}」への参加申請が承認されました。`,
+        { ideaId, applicationId, teamId }
+      );
+    }
+
+    // 拒否時: 応募者へ拒否通知
+    if (action === 'reject' && appDetail) {
+      await createNotification(
+        c.env.DB,
+        Number(appDetail.applicant_id),
+        'application_status',
+        '応募は拒否されました',
+        `あなたの「${String(appDetail.title)}」への参加申請は拒否されました。`,
+        { ideaId, applicationId }
+      );
+    }
 
     return c.json({
       success: true,
@@ -810,8 +891,8 @@ ideaRoutes.get('/:id/progress', optionalAuthMiddleware, async (c) => {
 
     // 進捗情報を計算
     const now = new Date();
-    const startDate = idea.start_date ? new Date(idea.start_date) : null;
-    const deadline = idea.deadline ? new Date(idea.deadline) : null;
+  const startDate = (typeof idea.start_date === 'string' || typeof idea.start_date === 'number') ? new Date(idea.start_date as any) : null;
+  const deadline = (typeof idea.deadline === 'string' || typeof idea.deadline === 'number') ? new Date(idea.deadline as any) : null;
 
     let daysElapsed = 0;
     let daysRemaining = 0;

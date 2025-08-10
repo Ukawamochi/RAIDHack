@@ -1,5 +1,7 @@
+import { ProjectDashboard } from '../features/projects'
+
 function ProjectPage() {
-    return <></>
+    return <ProjectDashboard />
 }
 
 export default ProjectPage

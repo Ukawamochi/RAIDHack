@@ -8,6 +8,7 @@ import { workRoutes } from "./works";
 import { notificationsRoutes } from "./notifications";
 import adminRoutes from "./admin";
 import { messageRouter } from "./message";
+import { projectRoutes } from "./projects";
 
 const apiRouter = new Hono<AppContext>();
 
@@ -19,6 +20,7 @@ apiRouter.route("/api/teams", teamRoutes);
 apiRouter.route("/api/works", workRoutes);
 apiRouter.route("/api/notifications", notificationsRoutes);
 apiRouter.route("/api/admin", adminRoutes);
+apiRouter.route("/api/projects", projectRoutes);
 
 apiRouter.route("/message", messageRouter);
 
