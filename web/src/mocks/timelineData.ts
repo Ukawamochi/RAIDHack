@@ -40,9 +40,9 @@ export const mockTimelinePosts: IdeaDetail[] = [
     updated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     required_skills: ['AI', 'HealthTech', 'React Native', 'Python'],
     applications: [
-      { id: 1, user: mockUsers[1], status: 'approved', message: 'UI/UXデザインで参加したいです！' },
-      { id: 2, user: mockUsers[2], status: 'pending', message: 'プロジェクト管理で貢献します' },
-      { id: 3, user: mockUsers[3], status: 'approved', message: 'バックエンド開発担当希望' }
+      { id: 1, idea_id: 1, applicant_id: 2, status: 'approved', message: 'UI/UXデザインで参加したいです！', applied_at: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString() },
+      { id: 2, idea_id: 1, applicant_id: 3, status: 'pending', message: 'プロジェクト管理で貢献します', applied_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() },
+      { id: 3, idea_id: 1, applicant_id: 4, status: 'approved', message: 'バックエンド開発担当希望', applied_at: new Date(Date.now() - 0.5 * 60 * 60 * 1000).toISOString() }
     ],
     like_count: 12
   },
@@ -57,7 +57,7 @@ export const mockTimelinePosts: IdeaDetail[] = [
     updated_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
     required_skills: ['WebSocket', 'React', 'Node.js', 'Collaboration'],
     applications: [
-      { id: 4, user: mockUsers[4], status: 'approved', message: 'フロントエンド開発で参加したいです' }
+      { id: 4, idea_id: 2, applicant_id: 5, status: 'approved', message: 'フロントエンド開発で参加したいです', applied_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() }
     ],
     like_count: 8
   },
@@ -72,10 +72,10 @@ export const mockTimelinePosts: IdeaDetail[] = [
     updated_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     required_skills: ['Blockchain', 'Solidity', 'Web3.js', 'Ethereum'],
     applications: [
-      { id: 5, user: mockUsers[0], status: 'approved', message: 'Solidityでスマートコントラクト開発' },
-      { id: 6, user: mockUsers[1], status: 'approved', message: 'フロントエンドUI作成' },
-      { id: 7, user: mockUsers[3], status: 'approved', message: 'セキュリティ監査担当' },
-      { id: 8, user: mockUsers[4], status: 'approved', message: 'テスト自動化' }
+      { id: 5, idea_id: 3, applicant_id: 1, status: 'approved', message: 'Solidityでスマートコントラクト開発', applied_at: new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString() },
+      { id: 6, idea_id: 3, applicant_id: 2, status: 'approved', message: 'フロントエンドUI作成', applied_at: new Date(Date.now() - 22.5 * 60 * 60 * 1000).toISOString() },
+      { id: 7, idea_id: 3, applicant_id: 4, status: 'approved', message: 'セキュリティ監査担当', applied_at: new Date(Date.now() - 22 * 60 * 60 * 1000).toISOString() },
+      { id: 8, idea_id: 3, applicant_id: 5, status: 'approved', message: 'テスト自動化', applied_at: new Date(Date.now() - 21.5 * 60 * 60 * 1000).toISOString() }
     ],
     like_count: 15
   },
@@ -90,8 +90,8 @@ export const mockTimelinePosts: IdeaDetail[] = [
     updated_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
     required_skills: ['AR', 'Unity', 'C#', 'Mobile'],
     applications: [
-      { id: 9, user: mockUsers[0], status: 'pending', message: 'ARエンジニアとして参加希望' },
-      { id: 10, user: mockUsers[4], status: 'approved', message: '3Dモデリング担当' }
+      { id: 9, idea_id: 4, applicant_id: 1, status: 'pending', message: 'ARエンジニアとして参加希望', applied_at: new Date(Date.now() - 11 * 60 * 60 * 1000).toISOString() },
+      { id: 10, idea_id: 4, applicant_id: 5, status: 'approved', message: '3Dモデリング担当', applied_at: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString() }
     ],
     like_count: 6
   },
@@ -112,7 +112,7 @@ export const mockTimelinePosts: IdeaDetail[] = [
 
 export const getCurrentUserApplications = (userId: number) => {
   return mockTimelinePosts.reduce((acc, post) => {
-    const userApp = post.applications?.find(app => app.user?.id === userId)
+    const userApp = post.applications?.find(app => app.applicant_id === userId)
     if (userApp) {
       acc[post.id!] = userApp
     }

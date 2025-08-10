@@ -24,7 +24,8 @@ export class MockTimelineApi {
     return {
       data: {
         success: true,
-        data: paginatedPosts,
+        message: 'Ideas retrieved successfully',
+        ideas: paginatedPosts,
         pagination: {
           page: page || 1,
           limit: limit || 10,
@@ -48,17 +49,16 @@ export class MockTimelineApi {
 
     // Update like count
     if (this.userLikes[id]) {
-      post.likeCount = (post.likeCount || 0) + 1
+      post.like_count = (post.like_count || 0) + 1
     } else {
-      post.likeCount = Math.max((post.likeCount || 0) - 1, 0)
+      post.like_count = Math.max((post.like_count || 0) - 1, 0)
     }
 
     return {
       data: {
         success: true,
         message: this.userLikes[id] ? 'いいねしました' : 'いいねを取り消しました',
-        liked: this.userLikes[id],
-        like_count: post.likeCount
+        liked: this.userLikes[id]
       }
     }
   }
@@ -71,12 +71,12 @@ export class MockTimelineApi {
       throw new Error('Post not found')
     }
 
-    if (!post.isRecruiting) {
+    if (post.status !== 'open') {
       throw new Error('この投稿は募集を締め切っています')
     }
 
     // Check if user already applied
-    const existingApplication = post.applications?.find(app => app.user?.id === this.currentUserId)
+    const existingApplication = post.applications?.find(app => app.applicant_id === this.currentUserId)
     if (existingApplication) {
       throw new Error('既に応募済みです')
     }
@@ -84,9 +84,11 @@ export class MockTimelineApi {
     // Add new application
     const newApplication = {
       id: Date.now(),
-      user: { id: this.currentUserId, username: 'current_user' },
+      idea_id: id,
+      applicant_id: this.currentUserId,
       status: 'pending' as const,
-      message: request.message
+      message: request.message,
+      applied_at: new Date().toISOString()
     }
 
     if (!post.applications) {
@@ -103,20 +105,21 @@ export class MockTimelineApi {
     }
   }
 
-  async apiIdeasPost(request: { title: string; description: string; tags?: string[]; isRecruiting: boolean }): Promise<{ data: ApiIdeasPost201Response }> {
+  async apiIdeasPost(request: { title: string; description: string; required_skills?: string[] }): Promise<{ data: ApiIdeasPost201Response }> {
     await delay(700)
     
     const newPost: IdeaDetail = {
       id: Date.now(),
       title: request.title,
       description: request.description,
-      isRecruiting: request.isRecruiting,
+      status: 'open',
+      user_id: this.currentUserId,
       user: { id: this.currentUserId, username: 'current_user' },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      tags: request.tags || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      required_skills: request.required_skills || [],
       applications: [],
-      likeCount: 0
+      like_count: 0
     }
 
     this.posts.unshift(newPost) // Add to beginning of timeline
@@ -125,7 +128,7 @@ export class MockTimelineApi {
       data: {
         success: true,
         message: 'アイデアを投稿しました！',
-        data: newPost
+        idea: newPost
       }
     }
   }
@@ -137,7 +140,7 @@ export class MockTimelineApi {
 
   hasUserAppliedToPost(postId: number): boolean {
     const post = this.posts.find(p => p.id === postId)
-    return post?.applications?.some(app => app.user?.id === this.currentUserId) || false
+    return post?.applications?.some(app => app.applicant_id === this.currentUserId) || false
   }
 
   isPostOwnedByCurrentUser(postId: number): boolean {

@@ -70,7 +70,7 @@ function PostItem({ post }: PostItemProps) {
 
   const getStatusLabel = () => {
     if (isOwner) return 'ホスト'
-    if (post.applications && post.applications.some(app => app.user?.id === user?.id)) return '参加'
+    if (post.applications && post.applications.some(app => app.applicant_id === user?.id)) return '参加'
     
     // ステータスに基づくラベル
     switch (post.status) {
@@ -87,7 +87,7 @@ function PostItem({ post }: PostItemProps) {
 
   const getStatusColor = () => {
     if (isOwner) return 'bg-blue-500'
-    if (post.applications && post.applications.some(app => app.user?.id === user?.id)) return 'bg-green-500'
+    if (post.applications && post.applications.some(app => app.applicant_id === user?.id)) return 'bg-green-500'
     
     // ステータスに基づく色
     switch (post.status) {
