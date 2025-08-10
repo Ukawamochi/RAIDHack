@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../features/auth'
+import { NewProjectForm } from '../features/new'
 
 function NewPostPage() {
     const { isAuthenticated } = useAuth()
@@ -8,9 +9,7 @@ function NewPostPage() {
         return <Navigate to="/" replace />
     }
     
-    return (
-        <h1>アイデアの投稿(準備中)</h1>
-    )
+    return <NewProjectForm />
 }
 
 export default NewPostPage

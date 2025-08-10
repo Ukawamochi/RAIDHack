@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS ideas (
   required_skills TEXT, -- JSON形式 ["React", "Node.js"]
   user_id INTEGER NOT NULL,
   status TEXT DEFAULT 'open' CHECK (status IN ('open', 'development', 'completed')),
+  start_date DATETIME, -- レイド開始日
+  deadline DATETIME, -- 期限
+  progress_percentage INTEGER DEFAULT 0 CHECK (progress_percentage >= 0 AND progress_percentage <= 100), -- 進捗率(0-100)
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
@@ -122,6 +125,18 @@ CREATE TABLE IF NOT EXISTS notifications (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Project Activities テーブル (プロジェクト活動ログ)
+CREATE TABLE IF NOT EXISTS project_activities (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL, -- ideas.id を参照
+  activity_type TEXT NOT NULL CHECK (activity_type IN ('status_change', 'deadline_set', 'progress_update', 'member_join', 'member_leave')),
+  description TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  created_by INTEGER NOT NULL, -- users.id を参照
+  FOREIGN KEY (project_id) REFERENCES ideas(id),
+  FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
 -- ==============================================
 -- インデックス作成（パフォーマンス向上のため）
 -- ==============================================
@@ -164,3 +179,9 @@ CREATE INDEX IF NOT EXISTS idx_idea_likes_user_id ON idea_likes(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
+
+-- Project Activities
+CREATE INDEX IF NOT EXISTS idx_project_activities_project_id ON project_activities(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_activities_created_by ON project_activities(created_by);
+CREATE INDEX IF NOT EXISTS idx_project_activities_activity_type ON project_activities(activity_type);
+CREATE INDEX IF NOT EXISTS idx_project_activities_created_at ON project_activities(created_at);

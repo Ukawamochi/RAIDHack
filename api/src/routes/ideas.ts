@@ -6,6 +6,10 @@ import {
   IdeaResponse,
   ErrorResponse,
   CreateIdeaRequest,
+  UpdateIdeaStatusRequest,
+  UpdateIdeaDeadlineRequest,
+  UpdateIdeaProgressRequest,
+  ProjectActivity,
   User 
 } from "../types";
 import { authMiddleware, optionalAuthMiddleware } from "../middleware/auth";
@@ -30,6 +34,7 @@ ideaRoutes.get('/', optionalAuthMiddleware, async (c) => {
     const ideas = await c.env.DB.prepare(`
       SELECT 
         i.id, i.title, i.description, i.required_skills, i.status, 
+        i.start_date, i.deadline, i.progress_percentage,
         i.created_at, i.updated_at, i.user_id,
         u.username, u.avatar_url,
         COUNT(il.id) as like_count,
@@ -40,6 +45,7 @@ ideaRoutes.get('/', optionalAuthMiddleware, async (c) => {
       ${userId ? 'LEFT JOIN idea_likes il_user ON i.id = il_user.idea_id AND il_user.user_id = ?' : ''}
       WHERE i.status = 'open'
       GROUP BY i.id, i.title, i.description, i.required_skills, i.status, 
+      i.start_date, i.deadline, i.progress_percentage,
       i.created_at, i.updated_at, i.user_id, u.username, u.avatar_url
       ORDER BY i.created_at DESC
       LIMIT ? OFFSET ?
@@ -61,6 +67,9 @@ ideaRoutes.get('/', optionalAuthMiddleware, async (c) => {
         required_skills: requiredSkills,
         user_id: idea.user_id as number,
         status: idea.status as 'open' | 'development' | 'completed',
+        start_date: idea.start_date as string,
+        deadline: idea.deadline as string,
+        progress_percentage: (idea.progress_percentage as number) || 0,
         created_at: idea.created_at as string,
         updated_at: idea.updated_at as string,
         username: idea.username as string,
@@ -113,6 +122,7 @@ ideaRoutes.get('/:id', optionalAuthMiddleware, async (c) => {
     const ideaData = await c.env.DB.prepare(`
       SELECT 
         i.id, i.title, i.description, i.required_skills, i.status, 
+        i.start_date, i.deadline, i.progress_percentage,
         i.created_at, i.updated_at, i.user_id,
         u.username, u.email, u.bio, u.skills, u.avatar_url,
         COUNT(il.id) as like_count,
@@ -123,6 +133,7 @@ ideaRoutes.get('/:id', optionalAuthMiddleware, async (c) => {
       ${userId ? 'LEFT JOIN idea_likes il_user ON i.id = il_user.idea_id AND il_user.user_id = ?' : ''}
       WHERE i.id = ?
       GROUP BY i.id, i.title, i.description, i.required_skills, i.status, 
+      i.start_date, i.deadline, i.progress_percentage,
       i.created_at, i.updated_at, i.user_id, u.username, u.email, 
       u.bio, u.skills, u.avatar_url
     `).bind(...(userId ? [userId, ideaId] : [ideaId])).first();
@@ -143,6 +154,9 @@ ideaRoutes.get('/:id', optionalAuthMiddleware, async (c) => {
       required_skills: ideaData.required_skills ? JSON.parse(ideaData.required_skills as string) : [],
       user_id: ideaData.user_id as number,
       status: ideaData.status as 'open' | 'development' | 'completed',
+      start_date: ideaData.start_date as string,
+      deadline: ideaData.deadline as string,
+      progress_percentage: (ideaData.progress_percentage as number) || 0,
       created_at: ideaData.created_at as string,
       updated_at: ideaData.updated_at as string,
       user: {
@@ -195,8 +209,8 @@ ideaRoutes.post('/', authMiddleware, async (c) => {
     // アイデア作成
     const skillsJson = required_skills ? JSON.stringify(required_skills) : null;
     const result = await c.env.DB.prepare(
-      `INSERT INTO ideas (title, description, required_skills, user_id, status)
-      VALUES (?, ?, ?, ?, 'open') RETURNING id, created_at, updated_at`
+      `INSERT INTO ideas (title, description, required_skills, user_id, status, progress_percentage)
+      VALUES (?, ?, ?, ?, 'open', 0) RETURNING id, created_at, updated_at`
     ).bind(title, description, skillsJson, user.id).first();
 
     if (!result) {
@@ -215,6 +229,7 @@ ideaRoutes.post('/', authMiddleware, async (c) => {
       required_skills: required_skills || [],
       user_id: user.id,
       status: 'open' as const,
+      progress_percentage: 0,
       created_at: result.created_at as string,
       updated_at: result.updated_at as string
     };
@@ -570,6 +585,355 @@ ideaRoutes.put('/:id/applications/:applicationId', authMiddleware, async (c) => 
     const errorResponse: ErrorResponse = {
       success: false,
       message: "応募審査中にエラーが発生しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});
+
+// ステータス変更エンドポイント
+ideaRoutes.put('/:id/status', authMiddleware, async (c) => {
+  try {
+    const ideaId = parseInt(c.req.param('id'));
+    const userId = c.get('userId') as number;
+    const { status, start_date } = await c.req.json() as UpdateIdeaStatusRequest;
+
+    if (!ideaId || isNaN(ideaId)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なアイデアIDです",
+        error: "Invalid idea ID"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    if (!['open', 'development', 'completed'].includes(status)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なステータスです",
+        error: "Invalid status"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // アイデアの所有者確認
+    const idea = await c.env.DB.prepare(
+      "SELECT user_id, status as current_status FROM ideas WHERE id = ?"
+    ).bind(ideaId).first();
+
+    if (!idea) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "アイデアが見つかりません",
+        error: "Idea not found"
+      };
+      return c.json(errorResponse, 404);
+    }
+
+    if (idea.user_id !== userId) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "このアイデアのステータスを変更する権限がありません",
+        error: "Not authorized to update status"
+      };
+      return c.json(errorResponse, 403);
+    }
+
+    // ステータス更新
+    let updateQuery = "UPDATE ideas SET status = ?, updated_at = CURRENT_TIMESTAMP";
+    let params: any[] = [status];
+
+    // developmentステータスになる場合は開始日を設定
+    if (status === 'development' && start_date) {
+      updateQuery += ", start_date = ?";
+      params.push(start_date);
+    }
+
+    // デフォルト期限設定（1ヶ月後）
+    if (status === 'development' && !start_date) {
+      const defaultDeadline = new Date();
+      defaultDeadline.setMonth(defaultDeadline.getMonth() + 1);
+      updateQuery += ", start_date = CURRENT_TIMESTAMP, deadline = ?";
+      params.push(defaultDeadline.toISOString());
+    }
+
+    updateQuery += " WHERE id = ?";
+    params.push(ideaId);
+
+    await c.env.DB.prepare(updateQuery).bind(...params).run();
+
+    // プロジェクト活動ログに記録
+    await c.env.DB.prepare(`
+      INSERT INTO project_activities (project_id, activity_type, description, created_by)
+      VALUES (?, 'status_change', ?, ?)
+    `).bind(ideaId, `ステータスを「${idea.current_status}」から「${status}」に変更しました`, userId).run();
+
+    return c.json({
+      success: true,
+      message: "ステータスが正常に更新されました"
+    });
+
+  } catch (error) {
+    console.error('Update status error:', error);
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "ステータス更新中にエラーが発生しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});
+
+// 期限設定エンドポイント
+ideaRoutes.put('/:id/deadline', authMiddleware, async (c) => {
+  try {
+    const ideaId = parseInt(c.req.param('id'));
+    const userId = c.get('userId') as number;
+    const { deadline } = await c.req.json() as UpdateIdeaDeadlineRequest;
+
+    if (!ideaId || isNaN(ideaId)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なアイデアIDです",
+        error: "Invalid idea ID"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    if (!deadline) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "期限は必須です",
+        error: "Deadline is required"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // アイデアの所有者確認
+    const idea = await c.env.DB.prepare(
+      "SELECT user_id FROM ideas WHERE id = ?"
+    ).bind(ideaId).first();
+
+    if (!idea) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "アイデアが見つかりません",
+        error: "Idea not found"
+      };
+      return c.json(errorResponse, 404);
+    }
+
+    if (idea.user_id !== userId) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "このアイデアの期限を設定する権限がありません",
+        error: "Not authorized to set deadline"
+      };
+      return c.json(errorResponse, 403);
+    }
+
+    // 期限更新
+    await c.env.DB.prepare(
+      "UPDATE ideas SET deadline = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+    ).bind(deadline, ideaId).run();
+
+    // プロジェクト活動ログに記録
+    await c.env.DB.prepare(`
+      INSERT INTO project_activities (project_id, activity_type, description, created_by)
+      VALUES (?, 'deadline_set', ?, ?)
+    `).bind(ideaId, `期限を ${new Date(deadline).toLocaleDateString('ja-JP')} に設定しました`, userId).run();
+
+    return c.json({
+      success: true,
+      message: "期限が正常に設定されました"
+    });
+
+  } catch (error) {
+    console.error('Set deadline error:', error);
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "期限設定中にエラーが発生しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});
+
+// 進捗取得エンドポイント
+ideaRoutes.get('/:id/progress', optionalAuthMiddleware, async (c) => {
+  try {
+    const ideaId = parseInt(c.req.param('id'));
+    const userId = c.get('userId') as number | undefined;
+
+    if (!ideaId || isNaN(ideaId)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なアイデアIDです",
+        error: "Invalid idea ID"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // アイデアの詳細情報を取得
+    const idea = await c.env.DB.prepare(`
+      SELECT 
+        i.id, i.title, i.status, i.start_date, i.deadline, i.progress_percentage,
+        i.created_at, i.updated_at, i.user_id,
+        u.username
+      FROM ideas i
+      JOIN users u ON i.user_id = u.id
+      WHERE i.id = ?
+    `).bind(ideaId).first();
+
+    if (!idea) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "アイデアが見つかりません",
+        error: "Idea not found"
+      };
+      return c.json(errorResponse, 404);
+    }
+
+    // プロジェクト参加者かどうかをチェック（将来の実装のため）
+    const isParticipant = userId && (idea.user_id === userId); // 簡易版：オーナーのみ
+
+    // 進捗情報を計算
+    const now = new Date();
+    const startDate = idea.start_date ? new Date(idea.start_date) : null;
+    const deadline = idea.deadline ? new Date(idea.deadline) : null;
+
+    let daysElapsed = 0;
+    let daysRemaining = 0;
+    let totalDays = 0;
+
+    if (startDate && deadline) {
+      totalDays = Math.ceil((deadline.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      daysElapsed = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      daysRemaining = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    }
+
+    // 最近のプロジェクト活動を取得
+    const activities = await c.env.DB.prepare(`
+      SELECT 
+        pa.activity_type, pa.description, pa.created_at,
+        u.username
+      FROM project_activities pa
+      JOIN users u ON pa.created_by = u.id
+      WHERE pa.project_id = ?
+      ORDER BY pa.created_at DESC
+      LIMIT 10
+    `).bind(ideaId).all();
+
+    return c.json({
+      success: true,
+      message: "進捗情報を取得しました",
+      progress: {
+        project: {
+          id: idea.id,
+          title: idea.title,
+          status: idea.status,
+          owner: idea.username,
+          progress_percentage: idea.progress_percentage
+        },
+        timeline: {
+          start_date: idea.start_date,
+          deadline: idea.deadline,
+          days_elapsed: daysElapsed,
+          days_remaining: daysRemaining,
+          total_days: totalDays
+        },
+        activities: activities.results.map((activity: any) => ({
+          type: activity.activity_type,
+          description: activity.description,
+          created_at: activity.created_at,
+          created_by: activity.username
+        })),
+        permissions: {
+          can_update_progress: isParticipant
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get progress error:', error);
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "進捗情報取得中にエラーが発生しました",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+    return c.json(errorResponse, 500);
+  }
+});
+
+// 進捗更新エンドポイント（プロジェクト参加者用）
+ideaRoutes.put('/:id/progress', authMiddleware, async (c) => {
+  try {
+    const ideaId = parseInt(c.req.param('id'));
+    const userId = c.get('userId') as number;
+    const { progress_percentage } = await c.req.json() as UpdateIdeaProgressRequest;
+
+    if (!ideaId || isNaN(ideaId)) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "無効なアイデアIDです",
+        error: "Invalid idea ID"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    if (progress_percentage < 0 || progress_percentage > 100) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "進捗率は0-100の範囲で入力してください",
+        error: "Invalid progress percentage"
+      };
+      return c.json(errorResponse, 400);
+    }
+
+    // アイデアの所有者確認（将来はプロジェクト参加者も含める）
+    const idea = await c.env.DB.prepare(
+      "SELECT user_id FROM ideas WHERE id = ?"
+    ).bind(ideaId).first();
+
+    if (!idea) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "アイデアが見つかりません",
+        error: "Idea not found"
+      };
+      return c.json(errorResponse, 404);
+    }
+
+    if (idea.user_id !== userId) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        message: "このプロジェクトの進捗を更新する権限がありません",
+        error: "Not authorized to update progress"
+      };
+      return c.json(errorResponse, 403);
+    }
+
+    // 進捗更新
+    await c.env.DB.prepare(
+      "UPDATE ideas SET progress_percentage = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+    ).bind(progress_percentage, ideaId).run();
+
+    // プロジェクト活動ログに記録
+    await c.env.DB.prepare(`
+      INSERT INTO project_activities (project_id, activity_type, description, created_by)
+      VALUES (?, 'progress_update', ?, ?)
+    `).bind(ideaId, `進捗を ${progress_percentage}% に更新しました`, userId).run();
+
+    return c.json({
+      success: true,
+      message: "進捗が正常に更新されました"
+    });
+
+  } catch (error) {
+    console.error('Update progress error:', error);
+    const errorResponse: ErrorResponse = {
+      success: false,
+      message: "進捗更新中にエラーが発生しました",
       error: error instanceof Error ? error.message : "Unknown error"
     };
     return c.json(errorResponse, 500);
