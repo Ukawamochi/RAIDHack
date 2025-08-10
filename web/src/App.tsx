@@ -14,6 +14,7 @@ import { AuthProvider, useAuth } from './features/auth'
 import Navigation from './components/Navigation'
 import { ProjectList } from './features/workspace'
 import { NotificationProvider, AlertContainer } from './features/notifications'
+import { TimelineProvider } from './contexts/TimelineContext'
 import { useLocation } from 'react-router-dom'
 
 function AppContent() {
@@ -53,9 +54,11 @@ function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <TimelineProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </TimelineProvider>
       </NotificationProvider>
     </AuthProvider>
   )

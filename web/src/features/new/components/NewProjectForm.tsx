@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAlert } from '../../notifications'
+import { useTimeline } from '../../../contexts/TimelineContext'
+import { ideasApi } from '../../../lib/api'
+import { ApiIdeasPostRequest } from '../../../generated'
 
 const NewProjectForm = () => {
   const [title, setTitle] = useState('')
@@ -7,6 +11,8 @@ const NewProjectForm = () => {
   const [tags, setTags] = useState('')
   const [isRecruitingMembers, setIsRecruitingMembers] = useState(true)
   const { showSuccess, showError } = useAlert()
+  const { triggerRefresh } = useTimeline()
+  const navigate = useNavigate()
 
   // ページ読み込み時に下書きを復元
   useEffect(() => {
@@ -54,22 +60,49 @@ const NewProjectForm = () => {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) {
       showError('入力エラー', 'プロジェクトタイトルを入力してください')
       return
     }
+
+    if (!description.trim()) {
+      showError('入力エラー', '詳細・ドキュメントを入力してください')
+      return
+    }
     
-    console.log('投稿', { title, description, tags, isRecruitingMembers })
-    
-    // 投稿完了後は下書きを削除
     try {
+      const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+      
+      const request: ApiIdeasPostRequest = {
+        title: title.trim(),
+        description: description.trim(),
+        required_skills: tagsArray
+      }
+
+      await ideasApi.apiIdeasPost(request)
+      
+      // 投稿完了後は下書きを削除
       localStorage.removeItem('projectDraft')
       showSuccess('投稿しました', 'プロジェクトが正常に投稿されました')
-      console.log('下書きを削除しました')
+      
+      // Timelineを更新
+      triggerRefresh()
+      
+      // フォームをリセット
+      setTitle('')
+      setDescription('')
+      setTags('')
+      setIsRecruitingMembers(true)
+      
+      // ホーム画面に戻る（TLを表示）
+      setTimeout(() => {
+        navigate('/')
+      }, 1500)
+      
     } catch (error) {
-      showError('エラー', '投稿は成功しましたが、下書きの削除に失敗しました')
-      console.error('下書きの削除に失敗しました:', error)
+      console.error('投稿に失敗しました:', error)
+      showError('投稿エラー', '投稿中にエラーが発生しました')
     }
   }
 
@@ -138,6 +171,12 @@ const NewProjectForm = () => {
                   />
                 </button>
               </div>
+              <p className="text-sm text-gray-300 mt-2">
+                {isRecruitingMembers 
+                  ? 'メンバー募集を行います（ステータス: open）' 
+                  : '募集を行いません（ステータス: development）'
+                }
+              </p>
             </div>
 
             {/* アクションボタン */}
