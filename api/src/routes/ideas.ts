@@ -72,11 +72,14 @@ ideaRoutes.get('/', optionalAuthMiddleware, async (c) => {
         progress_percentage: (idea.progress_percentage as number) || 0,
         created_at: idea.created_at as string,
         updated_at: idea.updated_at as string,
-        username: idea.username as string,
-        avatar_url: idea.avatar_url || undefined,
+        user: {
+          id: idea.user_id as number,
+          username: idea.username as string,
+          avatar_url: idea.avatar_url || undefined
+        },
         like_count: idea.like_count as number,
         user_liked: userId ? Boolean(idea.user_liked) : false
-      };
+      } as any;
     });
 
     const response: IdeasResponse = {
@@ -231,8 +234,16 @@ ideaRoutes.post('/', authMiddleware, async (c) => {
       status: 'open' as const,
       progress_percentage: 0,
       created_at: result.created_at as string,
-      updated_at: result.updated_at as string
-    };
+      updated_at: result.updated_at as string,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        bio: user.bio,
+        skills: user.skills,
+        avatar_url: user.avatarUrl
+      }
+    } as any;
 
     const response: IdeaResponse = {
       success: true,

@@ -3,6 +3,7 @@ import { IdeaDetail, ApiIdeasIdApplyPostRequest, IdeaDetailStatusEnum } from '..
 import { useAuth } from '../../auth'
 import { useTimeline } from '../../../contexts/TimelineContext'
 import { ideasApi } from '../../../lib/api'
+import { useAlert } from '../../notifications'
 
 interface PostItemProps {
   post: IdeaDetail
@@ -11,14 +12,20 @@ interface PostItemProps {
 function PostItem({ post }: PostItemProps) {
   const { user, isAuthenticated } = useAuth()
   const { triggerRefresh } = useTimeline()
+  const { showError } = useAlert()
   const [likeCount, setLikeCount] = useState(post.like_count || 0)
   const [userLiked, setUserLiked] = useState(post.user_liked || false)
   
   const isOwner = isAuthenticated && user?.id === post.user?.id
   const isRecruitmentClosed = post.status !== IdeaDetailStatusEnum.Open
+  console.log(post.user);
   
   const handleLike = async () => {
-    if (!isAuthenticated || !post.id) return
+    if (!isAuthenticated) {
+      showError('ログインが必要です', 'いいねするにはログインしてください')
+      return
+    }
+    if (!post.id) return
     
     try {
       await ideasApi.apiIdeasIdLikePost(post.id)
@@ -30,12 +37,19 @@ function PostItem({ post }: PostItemProps) {
   }
 
   const handleComment = () => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated) {
+      showError('ログインが必要です', 'コメントするにはログインしてください')
+      return
+    }
     console.log('コメント機能を実装予定')
   }
 
   const handleJoin = async () => {
-    if (!isAuthenticated || isOwner || isRecruitmentClosed || !post.id) return
+    if (!isAuthenticated) {
+      showError('ログインが必要です', '参加するにはログインしてください')
+      return
+    }
+    if (isOwner || isRecruitmentClosed || !post.id) return
     
     try {
       const request: ApiIdeasIdApplyPostRequest = {
@@ -49,7 +63,11 @@ function PostItem({ post }: PostItemProps) {
   }
 
   const handleFork = async () => {
-    if (!isAuthenticated || isOwner || !post.id) return
+    if (!isAuthenticated) {
+      showError('ログインが必要です', 'Forkするにはログインしてください')
+      return
+    }
+    if (isOwner || !post.id) return
     
     try {
       // Fork機能はアイデアを複製して新しいアイデアとして投稿
@@ -162,15 +180,19 @@ function PostItem({ post }: PostItemProps) {
         {/* プロジェクトタイトル */}
         <h3 className="text-white font-medium text-lg mb-2">{post.title}</h3>
         
+        {/* いいね数 */}
+        <div className="flex items-center space-x-4 text-sm text-gray-400 mb-2">
+          <span>{likeCount} いいね</span>
+        </div>
+        
         {/* アクションボタン（プロジェクト名の直下） */}
         <div className="flex space-x-2 mb-3">
           {/* いいねボタン */}
           <button
             onClick={handleLike}
-            disabled={!isAuthenticated}
             className={`p-1 rounded transition-colors ${
               userLiked ? 'text-red-400' : 'text-gray-400 hover:text-red-400'
-            } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            } cursor-pointer`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill={userLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -180,10 +202,7 @@ function PostItem({ post }: PostItemProps) {
           {/* コメントボタン */}
           <button
             onClick={handleComment}
-            disabled={!isAuthenticated}
-            className={`p-1 rounded transition-colors text-gray-400 hover:text-blue-400 ${
-              !isAuthenticated ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-            }`}
+            className="p-1 rounded transition-colors text-gray-400 hover:text-blue-400 cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -194,9 +213,9 @@ function PostItem({ post }: PostItemProps) {
           {!isOwner && (
             <button
               onClick={handleJoin}
-              disabled={!isAuthenticated || isRecruitmentClosed}
+              disabled={isRecruitmentClosed}
               className={`p-1 rounded transition-colors ${
-                isRecruitmentClosed || !isAuthenticated
+                isRecruitmentClosed
                   ? 'opacity-50 cursor-not-allowed text-gray-500'
                   : 'text-gray-400 hover:text-green-400 cursor-pointer'
               }`}
@@ -214,10 +233,7 @@ function PostItem({ post }: PostItemProps) {
           {!isOwner && (
             <button
               onClick={handleFork}
-              disabled={!isAuthenticated}
-              className={`p-1 rounded transition-colors text-gray-400 hover:text-purple-400 ${
-                !isAuthenticated ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-              }`}
+              className="p-1 rounded transition-colors text-gray-400 hover:text-purple-400 cursor-pointer"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="18" r="3"/>
@@ -232,7 +248,7 @@ function PostItem({ post }: PostItemProps) {
         
         {/* 参加者アイコン */}
         <div className="flex items-center space-x-1">
-          {post.applications?.slice(0, 4).map((application, index) => (
+          {post.applications?.slice(0, 4).map((_, index) => (
             <div key={index} className="w-6 h-6 bg-white rounded-full border-2 border-gray-500"></div>
           ))}
           {post.applications && post.applications.length > 4 && (
